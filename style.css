@@ -126,6 +126,41 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   border: 2px solid var(--cream);
 }
 
+/* ===== "Mehr"-Menü (fasst seltener genutzte Buttons zusammen) ===== */
+.more-menu-wrap{ position: relative; }
+.more-menu{
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--cream);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 30px rgba(80,50,40,0.25);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+  z-index: 40;
+}
+.more-menu.hidden{ display: none; }
+.more-menu-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--brown);
+  text-align: left;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+}
+.more-menu-item:active{ background: var(--bg-top); }
+.more-menu-item.hidden{ display: none; }
+
 .strawberry-counter{
   display: flex;
   align-items: center;
@@ -458,6 +493,20 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   50%{ transform: translate(-6px,6px) rotate(-8deg); }
   75%{ transform: translate(10px,10px) rotate(6deg); }
   100%{ transform: translate(0,0) rotate(0deg); }
+}
+
+/* Gestank-Wolken bei viel Schmutz */
+.stink-clouds{ position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.stink-cloud{
+  position: absolute;
+  font-size: 1.3rem;
+  opacity: 0;
+  animation: stinkRise 2.8s ease-in infinite;
+}
+@keyframes stinkRise{
+  0%{ transform: translateY(0) scale(0.7); opacity: 0; }
+  20%{ opacity: 0.85; }
+  100%{ transform: translateY(-38px) scale(1.15); opacity: 0; }
 }
 
 /* Herz/Stern-Partikel */

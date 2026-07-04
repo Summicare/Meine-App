@@ -45,7 +45,7 @@ const STORAGE_KEY = "baerchenState_v1";
 // Deutlich beschleunigt gegenüber vorher, damit sich Pflege spürbar lohnt.
 const DECAY = {
   hunger: 100 / (8 * 60),  // 8 Minuten
-  clean:  100 / (10 * 60), // 10 Minuten
+  clean:  100 / (20 * 60), // 20 Minuten - langsamer, damit er nach dem Waschen nicht gefühlt sofort wieder dreckig wird
   fun:    100 / (8 * 60),  // 8 Minuten – jetzt ungefähr im gleichen Tempo wie Hunger
 };
 
@@ -187,6 +187,7 @@ const el = {
   tear2: document.getElementById("tear2"),
   dirtSpots: document.getElementById("dirtSpots"),
   flies: document.getElementById("flies"),
+  stinkClouds: document.getElementById("stinkClouds"),
   particles: document.getElementById("particles"),
   washFx: document.getElementById("washFx"),
   speechBubble: document.getElementById("speechBubble"),
@@ -332,6 +333,24 @@ function renderDirt() {
       fly.style.top = 5 + Math.random() * 55 + "%";
       fly.style.animationDelay = Math.random() * 2 + "s";
       el.flies.appendChild(fly);
+    }
+  }
+
+  // Gestank-Wolken: erscheinen ab mittlerer Verschmutzung über dem Kopf
+  let stinkCount = 0;
+  if (state.clean < 50) stinkCount = 1;
+  if (state.clean < 25) stinkCount = 2;
+
+  if (el.stinkClouds.childElementCount !== stinkCount) {
+    el.stinkClouds.innerHTML = "";
+    for (let i = 0; i < stinkCount; i++) {
+      const cloud = document.createElement("div");
+      cloud.className = "stink-cloud";
+      cloud.textContent = "💨";
+      cloud.style.left = 35 + Math.random() * 30 + "%";
+      cloud.style.top = -2 + Math.random() * 10 + "%";
+      cloud.style.animationDelay = Math.random() * 2 + "s";
+      el.stinkClouds.appendChild(cloud);
     }
   }
 }
@@ -636,10 +655,19 @@ function scheduleSleep(delay) {
 
 function fallAsleep() {
   if (isSleeping) return;
-  if (!overlay.classList.contains("hidden") || isWorking) {
-    // Während eines Minispiels oder der Arbeit nicht einschlafen, aber später erneut prüfen
+  if (!overlay.classList.contains("hidden") || isWorking || isWatchingTV) {
+    // Während eines Minispiels, der Arbeit oder einer laufenden Sendung
+    // nicht einschlafen, aber später erneut prüfen.
     scheduleSleep(5000);
     return;
+  }
+  // Ein offen stehender "Darf ich fernsehen?"-Dialog darf nicht einfach
+  // weiter herumstehen, während Summi eigentlich schon schläft - er kann
+  // ja im Schlaf nicht mehr antworten.
+  if (tvPromptOpen) {
+    tvPromptOpen = false;
+    document.getElementById("tvPrompt").classList.add("hidden");
+    scheduleTV();
   }
   isSleeping = true;
   el.bearWrap.classList.add("sleeping");
@@ -667,6 +695,7 @@ function toggleManualSleep() {
   if (state.isDead) return showToast("😵 Summi ist ohnmächtig – erst wiederbeleben!");
   if (isWorking) return showToast("💼 Erst wenn er mit der Arbeit fertig ist!");
   if (state.isTorn) return showToast("🪡 Erst die Naht flicken, dann kann Summi schlafen!");
+  if (isWatchingTV) return showToast("📺 Erst wenn die Sendung zu Ende ist!");
   if (isSleeping) {
     wakeUp();
     scheduleSleep(IDLE_SLEEP_MS);
@@ -829,9 +858,13 @@ function finishWork() {
   const earned = Math.floor(10 + Math.random() * 21); // 10-30 Coins
   state.coins += earned;
   state.stats.worksDone++;
-  showToast("💼 Feierabend! +" + earned + " Coins verdient!");
+  // Logische Folge: Arbeiten kostet Kraft - danach ist er hungriger und
+  // müder, statt einfach unverändert weiterzumachen wie zuvor.
+  state.hunger = clamp(state.hunger - 15);
+  state.fun = clamp(state.fun - 5);
+  showToast("💼 Feierabend! +" + earned + " Coins verdient! Er hat jetzt Hunger und ist müde.");
   vibrate(20);
-  registerInteraction();
+  registerInteraction(true); // müde von der Arbeit -> schläft bald ein, wie nach dem Spielen
   renderAll();
   saveState();
   checkAchievements();
@@ -3027,6 +3060,24 @@ function drawSky(c) {
 /* ---------------------------------------------------------------------
    10) EVENT-VERDRAHTUNG
 --------------------------------------------------------------------- */
+
+// "Mehr"-Dropdown: fasst Kartenalbum/Fotoalbum/Info/Installieren zusammen,
+// damit die Kopfzeile nicht mit lauter kleinen Icons überladen wirkt.
+const moreBtn = document.getElementById("moreBtn");
+const moreMenu = document.getElementById("moreMenu");
+moreBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  moreMenu.classList.toggle("hidden");
+});
+moreMenu.addEventListener("click", (e) => {
+  if (e.target.closest(".more-menu-item")) moreMenu.classList.add("hidden");
+});
+document.addEventListener("click", (e) => {
+  if (!moreMenu.classList.contains("hidden") && !moreMenu.contains(e.target) && e.target !== moreBtn) {
+    moreMenu.classList.add("hidden");
+  }
+});
+
 document.getElementById("btnFeed").addEventListener("click", feed);
 document.getElementById("btnDrink").addEventListener("click", drink);
 document.getElementById("btnWash").addEventListener("click", wash);

@@ -50,10 +50,15 @@
     <div class="topbar2-icons">
       <button class="icon-btn" id="questBtn" aria-label="Erfolge" title="Tägliche Belohnung &amp; Erfolge">🏆</button>
       <button class="icon-btn" id="shopBtn" aria-label="Shop" title="Spielzeug-Shop">🛍️</button>
-      <button class="icon-btn" id="cardAlbumBtn" aria-label="Kartenalbum" title="Sammelkarten-Album">🎴</button>
-      <button class="icon-btn" id="albumBtn" aria-label="Fotoalbum" title="Fotoalbum">📸</button>
-      <button class="icon-btn" id="infoBtn" aria-label="Info" title="Info">ℹ️</button>
-      <button class="icon-btn hidden" id="installBtn" aria-label="App installieren" title="Als App installieren">📲</button>
+      <div class="more-menu-wrap">
+        <button class="icon-btn" id="moreBtn" aria-label="Mehr" title="Weitere Optionen">⋯</button>
+        <div class="more-menu hidden" id="moreMenu">
+          <button class="more-menu-item" id="cardAlbumBtn">🎴 <span>Kartenalbum</span></button>
+          <button class="more-menu-item" id="albumBtn">📸 <span>Fotoalbum</span></button>
+          <button class="more-menu-item" id="infoBtn">ℹ️ <span>Info</span></button>
+          <button class="more-menu-item hidden" id="installBtn">📲 <span>App installieren</span></button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -84,6 +89,9 @@
     <div class="bear-wrap" id="bearWrap">
       <!-- Fliegen bei Schmutz -->
       <div class="flies" id="flies"></div>
+
+      <!-- Gestank-Wolken bei viel Schmutz -->
+      <div class="stink-clouds" id="stinkClouds"></div>
 
       <!-- Herzchen / Sterne beim Streicheln -->
       <div class="particles" id="particles"></div>
