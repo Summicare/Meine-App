@@ -1380,11 +1380,13 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   overflow: hidden;
 }
 .booster-pack-card::before{
-  /* dezenter Folien-Glanzstreifen quer über das Pack */
+  /* wandernder Folien-Glanzstreifen quer über das Pack, wie bei echten Booster-Packs */
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.35) 48%, transparent 66%);
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.45) 48%, transparent 66%);
+  background-size: 250% 250%;
+  animation: shineSweep 3.2s linear infinite;
   pointer-events: none;
 }
 .booster-pack-name{
@@ -1443,7 +1445,7 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   padding: 3px;
   position: relative;
   box-shadow: var(--shadow);
-  background: #A79484; /* common: schlichter Rahmen */
+  background: linear-gradient(135deg, #C9B8A8, #8A7268); /* common: dezenter Verlauf */
 }
 .card-tile-inner{
   background: #EFE1D6;
@@ -1452,6 +1454,7 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   height: 100%;
   display: flex;
   flex-direction: column;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
 }
 .card-photo-wrap{ flex: 1; overflow: hidden; position: relative; }
 .card-photo-wrap img{ width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -1470,11 +1473,12 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   right: 6px;
   font-size: 0.55rem;
   font-weight: 800;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 999px;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.45);
   color: #fff;
-  z-index: 2;
+  z-index: 3;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.4);
 }
 .card-tile .card-count{
   position: absolute;
@@ -1486,45 +1490,95 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   color: #fff;
   border-radius: 999px;
   padding: 1px 6px;
-  z-index: 2;
+  z-index: 3;
 }
 
-/* Rare/Ultra: farbiger Rahmen + Leuchten */
-.card-tile.rarity-rare{ background: #5286BE; box-shadow: 0 0 10px rgba(82,134,190,0.55), var(--shadow); }
-.card-tile.rarity-ultra{ background: linear-gradient(160deg,#C79AF0,#8F5FD1); box-shadow: 0 0 14px rgba(143,95,209,0.6), var(--shadow); }
+/* Kleine funkelnde Ecken-Sparkles, je auffälliger je seltener */
+.card-sparkle{
+  position: absolute;
+  font-size: 0.75rem;
+  z-index: 3;
+  pointer-events: none;
+  animation: sparkleTwinkle 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+.card-sparkle-tl{ top: 4px; left: 5px; }
+.card-sparkle-bl{ bottom: 22px; left: 5px; animation-delay: 0.5s; }
+@keyframes sparkleTwinkle{
+  0%, 100%{ transform: scale(0.7) rotate(0deg); opacity: 0.5; }
+  50%{ transform: scale(1.15) rotate(15deg); opacity: 1; }
+}
 
-/* Legendär: animierter Glitzerrahmen + pulsierender Halo-Schein + Glanzstreifen übers Foto */
+/* ===== Rare: blaues Metallic-Foil mit Glanzstreifen ===== */
+.card-tile.rarity-rare{
+  background: linear-gradient(135deg, #9FCBEF, #3D6FA0);
+  box-shadow: 0 0 10px rgba(61,111,160,0.55), var(--shadow);
+}
+.card-tile.rarity-rare .card-rarity-badge{ background: linear-gradient(135deg,#7FB3E0,#3D6FA0); }
+.card-tile.rarity-rare .card-photo-wrap::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 40%, rgba(190,225,255,0.55) 50%, transparent 60%);
+  background-size: 250% 250%;
+  animation: shineSweep 3.4s linear infinite;
+  pointer-events: none;
+}
+
+/* ===== Ultra: violett-goldenes Foil, stärkeres Leuchten ===== */
+.card-tile.rarity-ultra{
+  background: linear-gradient(135deg, #E0B3FF, #8F5FD1);
+  box-shadow: 0 0 16px rgba(143,95,209,0.65), var(--shadow);
+}
+.card-tile.rarity-ultra .card-tile-inner{ box-shadow: inset 0 0 0 1px rgba(255,217,125,0.5); }
+.card-tile.rarity-ultra .card-rarity-badge{ background: linear-gradient(135deg,#E0B3FF,#8F5FD1); }
+.card-tile.rarity-ultra .card-photo-wrap::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 38%, rgba(255,235,190,0.6) 50%, transparent 62%);
+  background-size: 250% 250%;
+  animation: shineSweep 2.9s linear infinite;
+  pointer-events: none;
+}
+.card-tile.rarity-ultra .card-sparkle{ color: #FFD97D; }
+
+/* ===== Legendär: animierter Glitzerrahmen + starker Halo-Schein + Glanzstreifen ===== */
 .card-tile.rarity-legendary{
-  background: linear-gradient(120deg, #FFD97D, #F26D9B, #7FB3B8, #FFD97D);
+  background: linear-gradient(120deg, #FFD97D, #F26D9B, #7FB3B8, #C79AF0, #FFD97D);
   background-size: 300% 300%;
   animation: legendaryShimmer 3s ease infinite;
-  box-shadow: 0 0 18px rgba(255,217,125,0.75), var(--shadow);
+  box-shadow: 0 0 20px rgba(255,150,200,0.8), var(--shadow);
   z-index: 1;
+}
+.card-tile.rarity-legendary .card-rarity-badge{
+  background: linear-gradient(135deg, #FFD97D, #F26D9B);
 }
 .card-tile.rarity-legendary::before{
   content: "";
   position: absolute;
-  inset: -14px;
-  border-radius: 24px;
+  inset: -18px;
+  border-radius: 26px;
   background: conic-gradient(from 0deg, #FFD97D, #F26D9B, #7FB3B8, #C79AF0, #FFD97D);
-  filter: blur(14px);
-  opacity: 0.6;
+  filter: blur(18px);
+  opacity: 0.75;
   z-index: -1;
-  animation: haloPulse 2.4s ease-in-out infinite;
+  animation: haloPulse 2s ease-in-out infinite;
 }
 @keyframes haloPulse{
-  0%, 100%{ opacity: 0.45; transform: scale(0.96); }
-  50%{ opacity: 0.75; transform: scale(1.05); }
+  0%, 100%{ opacity: 0.55; transform: scale(0.94); }
+  50%{ opacity: 0.95; transform: scale(1.1); }
 }
 .card-tile.rarity-legendary .card-photo-wrap::after{
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.75) 50%, transparent 65%);
+  background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.8) 50%, transparent 65%);
   background-size: 250% 250%;
-  animation: shineSweep 2.6s linear infinite;
+  animation: shineSweep 2.2s linear infinite;
   pointer-events: none;
 }
+.card-tile.rarity-legendary .card-sparkle{ color: #FFD97D; font-size: 0.9rem; }
 @keyframes shineSweep{
   0%{ background-position: 0% 0%; }
   100%{ background-position: 100% 100%; }

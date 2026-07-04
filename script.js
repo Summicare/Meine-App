@@ -1493,6 +1493,7 @@ const CARD_POOL = [
   { id: "p17", name: "Strahlender Stern", img: "photos/photo17.jpg", rarity: "ultra" },
   { id: "p18", name: "Goldmoment", img: "photos/photo18.jpg", rarity: "ultra" },
   { id: "p19", name: "Der ganz besondere Moment", img: "photos/photo19.jpg", rarity: "legendary" },
+  { id: "p20", name: "Schlummerstunde", img: "photos/photo20.jpg", rarity: "ultra" },
 ];
 
 const BOOSTER_PACKS = [
@@ -1549,6 +1550,9 @@ function cardTileHtml(card, options = {}) {
   const countBadge = owned > 1 ? `<span class="card-count">×${owned}</span>` : "";
   const revealClass = options.reveal ? "reveal-in" : "";
   const delay = options.delay ? `style="animation-delay:${options.delay}s"` : "";
+  const sparkles = card.rarity !== "common"
+    ? `<span class="card-sparkle card-sparkle-tl">✨</span><span class="card-sparkle card-sparkle-bl">✨</span>`
+    : "";
   return `
     <div class="card-tile rarity-${card.rarity} ${revealClass}" ${delay}>
       <div class="card-tile-inner">
@@ -1557,6 +1561,7 @@ function cardTileHtml(card, options = {}) {
       </div>
       <span class="card-rarity-badge">${CARD_RARITIES[card.rarity].label}</span>
       ${countBadge}
+      ${sparkles}
     </div>`;
 }
 
