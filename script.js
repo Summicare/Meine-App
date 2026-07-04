@@ -1216,6 +1216,7 @@ function renderShop() {
 }
 
 function renderToyShop() {
+  shopList.className = "shop-list";
   shopList.innerHTML = TOYS.map(
     (toy) => `
     <div class="shop-item">
@@ -1258,6 +1259,7 @@ function renderToyInventory() {
 }
 
 function renderClothesShop() {
+  shopList.className = "shop-list";
   shopList.innerHTML = CLOTHES.map((item) => {
     const preview = CLOTHES_PREVIEW[item.id];
     const previewHtml = preview
@@ -1460,10 +1462,9 @@ function startTickLoop() {
 
 /* ---------------------------------------------------------------------
    7f-2) SAMMELKARTEN & BOOSTER-PACKS
-   Platzhalter-Karten (Emoji + Farbverlauf je Seltenheit). Später einfach
-   durch echte Bilder ersetzbar: dazu bei einer Karte ein "img"-Feld mit
-   dem Dateipfad ergänzen - das Kartenraster nutzt dann automatisch das
-   Bild statt Emoji+Farbe (siehe cardTileHtml()).
+   Die Karten zeigen echte Summi-Fotos (dieselben Bilder wie im
+   Fotoalbum), gerahmt je nach Seltenheit. Um weitere Karten zu
+   ergänzen, einfach einen Eintrag mit "img"-Pfad + Seltenheit anhängen.
 --------------------------------------------------------------------- */
 const CARD_RARITIES = {
   common: { label: "Common", weight: 60 },
@@ -1473,27 +1474,52 @@ const CARD_RARITIES = {
 };
 
 const CARD_POOL = [
-  { id: "c_strawberry", name: "Erdbeer-Fan", emoji: "🍓", rarity: "common" },
-  { id: "c_cuddle", name: "Kuschelzeit", emoji: "🧸", rarity: "common" },
-  { id: "c_ball", name: "Ballspiel", emoji: "⚽", rarity: "common" },
-  { id: "c_yoyo", name: "Jo-Jo-Trick", emoji: "🪀", rarity: "common" },
-  { id: "c_scarf", name: "Warmer Schal", emoji: "🧣", rarity: "common" },
-  { id: "c_piglet", name: "Ferkel-Freund", emoji: "🐷", rarity: "common" },
-  { id: "c_balloon", name: "Luftballon", emoji: "🎈", rarity: "common" },
-  { id: "c_blocks", name: "Bauklötze", emoji: "🧩", rarity: "common" },
-  { id: "r_cowboy", name: "Cowboy-Abenteuer", emoji: "🤠", rarity: "rare" },
-  { id: "r_kite", name: "Drachen-Flug", emoji: "🪁", rarity: "rare" },
-  { id: "r_bow", name: "Elegante Fliege", emoji: "🎀", rarity: "rare" },
-  { id: "r_glasses", name: "Coole Brille", emoji: "🕶️", rarity: "rare" },
-  { id: "r_honey", name: "Honig-Boost", emoji: "🍯", rarity: "rare" },
-  { id: "u_hat", name: "Der Gentleman", emoji: "🎩", rarity: "ultra" },
-  { id: "u_flower", name: "Blütenzauber", emoji: "🌸", rarity: "ultra" },
-  { id: "l_dream", name: "Traumwelt-Summi", emoji: "🌈", rarity: "legendary" },
+  { id: "p1", name: "Kuschelmoment", img: "photos/photo1.jpg", rarity: "common" },
+  { id: "p2", name: "Verschlafen", img: "photos/photo2.jpg", rarity: "common" },
+  { id: "p3", name: "Neugierig", img: "photos/photo3.jpg", rarity: "common" },
+  { id: "p4", name: "Verspielt", img: "photos/photo4.jpg", rarity: "common" },
+  { id: "p5", name: "Gemütlich", img: "photos/photo5.jpg", rarity: "common" },
+  { id: "p6", name: "Träumerisch", img: "photos/photo6.jpg", rarity: "common" },
+  { id: "p7", name: "Zufrieden", img: "photos/photo7.jpg", rarity: "common" },
+  { id: "p8", name: "Entspannt", img: "photos/photo8.jpg", rarity: "common" },
+  { id: "p9", name: "Fröhlich", img: "photos/photo9.jpg", rarity: "common" },
+  { id: "p10", name: "Ausgeruht", img: "photos/photo10.jpg", rarity: "common" },
+  { id: "p11", name: "Abenteuerlustig", img: "photos/photo11.jpg", rarity: "rare" },
+  { id: "p12", name: "Verträumt", img: "photos/photo12.jpg", rarity: "rare" },
+  { id: "p13", name: "Strahlend", img: "photos/photo13.jpg", rarity: "rare" },
+  { id: "p14", name: "Herzlich", img: "photos/photo14.jpg", rarity: "rare" },
+  { id: "p15", name: "Charmant", img: "photos/photo15.jpg", rarity: "rare" },
+  { id: "p16", name: "Bezaubernd", img: "photos/photo16.jpg", rarity: "rare" },
+  { id: "p17", name: "Strahlender Stern", img: "photos/photo17.jpg", rarity: "ultra" },
+  { id: "p18", name: "Goldmoment", img: "photos/photo18.jpg", rarity: "ultra" },
+  { id: "p19", name: "Der ganz besondere Moment", img: "photos/photo19.jpg", rarity: "legendary" },
 ];
 
 const BOOSTER_PACKS = [
-  { id: "basic", name: "Standard-Pack", emoji: "🎴", desc: "3 zufällige Karten", cost: 40, currency: "coins", cardCount: 3, boosted: false },
-  { id: "premium", name: "Glücks-Pack", emoji: "✨", desc: "3 Karten, bessere Chance auf Seltenes!", cost: 12, currency: "strawberries", cardCount: 3, boosted: true },
+  {
+    id: "basic",
+    name: "Kuschelmomente",
+    subtitle: "Standard-Pack",
+    desc: "3 zufällige Karten",
+    cost: 40,
+    currency: "coins",
+    cardCount: 3,
+    boosted: false,
+    coverImg: "photos/photo1.jpg",
+    gradient: "linear-gradient(160deg,#7FB3B8,#5FA3A8)",
+  },
+  {
+    id: "premium",
+    name: "Sternenstaub",
+    subtitle: "Glücks-Pack",
+    desc: "3 Karten, bessere Chance auf Seltenes!",
+    cost: 12,
+    currency: "strawberries",
+    cardCount: 3,
+    boosted: true,
+    coverImg: "photos/photo17.jpg",
+    gradient: "linear-gradient(160deg,#C79AF0,#8F5FD1)",
+  },
 ];
 
 function rollCardRarity(boosted) {
@@ -1525,9 +1551,11 @@ function cardTileHtml(card, options = {}) {
   const delay = options.delay ? `style="animation-delay:${options.delay}s"` : "";
   return `
     <div class="card-tile rarity-${card.rarity} ${revealClass}" ${delay}>
+      <div class="card-tile-inner">
+        <div class="card-photo-wrap"><img src="${card.img}" alt="${card.name}" loading="lazy"></div>
+        <span class="card-name">${card.name}</span>
+      </div>
       <span class="card-rarity-badge">${CARD_RARITIES[card.rarity].label}</span>
-      <span class="card-emoji">${card.emoji}</span>
-      <span class="card-name">${card.name}</span>
       ${countBadge}
     </div>`;
 }
@@ -1572,18 +1600,18 @@ function closeBoosterReveal() {
 }
 
 function renderCardsShop() {
+  shopList.className = "shop-boosters";
   shopList.innerHTML = BOOSTER_PACKS.map((pack) => {
     const balance = pack.currency === "coins" ? state.coins : state.strawberries;
     const costLabel = pack.currency === "coins"
       ? `${pack.cost}<img src="coin_gold_bear.png" alt="Coins" class="coin-icon">`
       : `${pack.cost} 🍓`;
     return `
-    <div class="booster-item">
-      <div class="booster-item-emoji">${pack.emoji}</div>
-      <div class="booster-item-info">
-        <div class="booster-item-name">${pack.name}</div>
-        <div class="booster-item-desc">${pack.desc}</div>
-      </div>
+    <div class="booster-pack-card" style="background:${pack.gradient}">
+      <div class="booster-pack-subtitle">${pack.subtitle}</div>
+      <div class="booster-pack-name">${pack.name}</div>
+      <div class="booster-pack-photo"><img src="${pack.coverImg}" alt="${pack.name}"></div>
+      <div class="booster-pack-desc">${pack.desc}</div>
       <button class="booster-buy-btn" data-pack="${pack.id}" ${balance < pack.cost ? "disabled" : ""}>
         ${costLabel}
       </button>
@@ -1855,6 +1883,8 @@ function statsSnapshot() {
   };
 }
 
+let achievementUnlockQueue = [];
+
 function checkAchievements() {
   const snap = statsSnapshot();
   let unlockedAny = false;
@@ -1864,21 +1894,40 @@ function checkAchievements() {
       state.achievementsClaimed[a.id] = true;
       state.coins += a.reward.coins;
       addStrawberries(a.reward.strawberries);
-      showToast(
-        "🏅 Erfolg freigeschaltet: " + a.title + " (+" + a.reward.coins + " Coins" +
-        (a.reward.strawberries ? " +" + a.reward.strawberries + " 🍓" : "") + ")"
-      );
       spawnParticles("🏅", 4);
       vibrate(30);
       unlockedAny = true;
+      achievementUnlockQueue.push(a);
     }
   }
   if (unlockedAny) {
     renderAll();
     saveState();
+    showNextAchievementUnlock();
   }
   renderAchievements();
 }
+
+// Zeigt Erfolge nacheinander als gut sichtbares Popup an (statt sie nur
+// im schnell verschwindenden Toast zu erwähnen), auch wenn mehrere auf
+// einmal freigeschaltet wurden.
+function showNextAchievementUnlock() {
+  const overlayEl = document.getElementById("achievementUnlockOverlay");
+  if (!overlayEl.classList.contains("hidden")) return; // schon eins offen, wartet in der Queue
+  const a = achievementUnlockQueue.shift();
+  if (!a) return;
+  document.getElementById("achievementUnlockIcon").textContent = a.icon;
+  document.getElementById("achievementUnlockTitle").textContent = a.title;
+  document.getElementById("achievementUnlockDesc").textContent = a.desc;
+  document.getElementById("achievementUnlockReward").textContent =
+    "+" + a.reward.coins + " Coins" + (a.reward.strawberries ? " +" + a.reward.strawberries + " 🍓" : "");
+  overlayEl.classList.remove("hidden");
+}
+
+document.getElementById("achievementUnlockCloseBtn").addEventListener("click", () => {
+  document.getElementById("achievementUnlockOverlay").classList.add("hidden");
+  showNextAchievementUnlock();
+});
 
 function renderAchievements() {
   const listEl = document.getElementById("achievementList");

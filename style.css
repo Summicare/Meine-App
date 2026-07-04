@@ -1248,6 +1248,34 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
 .achievement-item.done .achievement-progress-fill{ background: #7FC77A; }
 .achievement-check{ font-size: 1.3rem; flex: 0 0 auto; }
 
+/* ===== Erfolg-freigeschaltet-Popup ===== */
+.achievement-unlock-icon{
+  font-size: 3.2rem;
+  animation: achievementPop 0.5s ease;
+}
+@keyframes achievementPop{
+  0%{ transform: scale(0.3) rotate(-15deg); opacity: 0; }
+  60%{ transform: scale(1.15) rotate(5deg); opacity: 1; }
+  100%{ transform: scale(1) rotate(0deg); }
+}
+.achievement-unlock-title{
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  margin: 4px 0 2px;
+  color: var(--brown);
+}
+.achievement-unlock-reward{
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--pink-dark);
+  background: linear-gradient(160deg,#FFF6EE,#FDEBDD);
+  border-radius: 999px;
+  padding: 8px 16px;
+  display: inline-block;
+  margin: 8px 0 14px;
+}
+
 /* ===== Spielzeug-Spiel-Overlay ===== */
 .toyplay-panel{ text-align: center; }
 .toyplay-stage{
@@ -1331,79 +1359,188 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   padding: 12px;
   box-shadow: var(--shadow);
 }
-.booster-item-emoji{ font-size: 2rem; flex: 0 0 auto; }
-.booster-item-info{ flex: 1; }
-.booster-item-name{ font-weight: 700; font-size: 0.92rem; }
-.booster-item-desc{ font-size: 0.72rem; color: var(--brown-light); }
-.booster-buy-btn{
-  background: var(--teal);
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-weight: 700;
-  font-size: 0.8rem;
-  cursor: pointer;
-  white-space: nowrap;
+/* ===== Booster-Pack-Regal (Foliopack-Optik) ===== */
+.shop-boosters{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 10px;
 }
-.booster-buy-btn:disabled{ background: #D8CFC6; cursor: not-allowed; }
-
-/* Karten-Kachel, gemeinsam für Album + Pack-Reveal genutzt */
-.card-tile{
-  aspect-ratio: 3 / 4;
-  border-radius: 14px;
+.booster-pack-card{
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 16px;
+  padding: 10px 8px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 4px;
   text-align: center;
-  position: relative;
+  box-shadow: 0 10px 22px rgba(80,50,40,0.28);
+  border: 3px solid rgba(255,255,255,0.55);
   overflow: hidden;
-  box-shadow: var(--shadow);
 }
-.card-tile .card-emoji{ font-size: 1.8rem; }
-.card-tile .card-name{ font-size: 0.62rem; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.35); line-height: 1.15; }
+.booster-pack-card::before{
+  /* dezenter Folien-Glanzstreifen quer über das Pack */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.35) 48%, transparent 66%);
+  pointer-events: none;
+}
+.booster-pack-name{
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.35);
+  line-height: 1.1;
+}
+.booster-pack-subtitle{
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.booster-pack-photo{
+  width: 78%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.7);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  margin: 4px 0 6px;
+}
+.booster-pack-photo img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+.booster-pack-desc{
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.25;
+  flex: 1;
+}
+.booster-buy-btn{
+  margin-top: 8px;
+  background: rgba(255,255,255,0.92);
+  color: var(--brown);
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.booster-buy-btn:disabled{ background: rgba(255,255,255,0.55); color: var(--brown-light); cursor: not-allowed; }
+
+/* ===== Karten-Kachel: echtes Foto + Seltenheits-Rahmen ===== */
+.card-tile{
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
+  padding: 3px;
+  position: relative;
+  box-shadow: var(--shadow);
+  background: #A79484; /* common: schlichter Rahmen */
+}
+.card-tile-inner{
+  background: #EFE1D6;
+  border-radius: 11px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.card-photo-wrap{ flex: 1; overflow: hidden; position: relative; }
+.card-photo-wrap img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-tile .card-name{
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+  padding: 3px 2px;
+  background: rgba(60,45,35,0.7);
+}
 .card-tile .card-rarity-badge{
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 6px;
+  right: 6px;
   font-size: 0.55rem;
   font-weight: 800;
-  padding: 2px 5px;
+  padding: 2px 6px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.35);
+  background: rgba(0,0,0,0.4);
   color: #fff;
+  z-index: 2;
 }
 .card-tile .card-count{
   position: absolute;
-  bottom: 4px;
-  right: 4px;
+  bottom: 22px;
+  right: 6px;
   font-size: 0.6rem;
   font-weight: 800;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.5);
   color: #fff;
   border-radius: 999px;
   padding: 1px 6px;
+  z-index: 2;
 }
-.card-tile.rarity-common{ background: linear-gradient(160deg,#C9B8A8,#A79484); }
-.card-tile.rarity-rare{ background: linear-gradient(160deg,#7FB3E0,#5286BE); }
-.card-tile.rarity-ultra{ background: linear-gradient(160deg,#C79AF0,#8F5FD1); box-shadow: 0 0 12px rgba(143,95,209,0.55), var(--shadow); }
+
+/* Rare/Ultra: farbiger Rahmen + Leuchten */
+.card-tile.rarity-rare{ background: #5286BE; box-shadow: 0 0 10px rgba(82,134,190,0.55), var(--shadow); }
+.card-tile.rarity-ultra{ background: linear-gradient(160deg,#C79AF0,#8F5FD1); box-shadow: 0 0 14px rgba(143,95,209,0.6), var(--shadow); }
+
+/* Legendär: animierter Glitzerrahmen + pulsierender Halo-Schein + Glanzstreifen übers Foto */
 .card-tile.rarity-legendary{
   background: linear-gradient(120deg, #FFD97D, #F26D9B, #7FB3B8, #FFD97D);
   background-size: 300% 300%;
   animation: legendaryShimmer 3s ease infinite;
-  box-shadow: 0 0 16px rgba(255,217,125,0.7), var(--shadow);
+  box-shadow: 0 0 18px rgba(255,217,125,0.75), var(--shadow);
+  z-index: 1;
+}
+.card-tile.rarity-legendary::before{
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 24px;
+  background: conic-gradient(from 0deg, #FFD97D, #F26D9B, #7FB3B8, #C79AF0, #FFD97D);
+  filter: blur(14px);
+  opacity: 0.6;
+  z-index: -1;
+  animation: haloPulse 2.4s ease-in-out infinite;
+}
+@keyframes haloPulse{
+  0%, 100%{ opacity: 0.45; transform: scale(0.96); }
+  50%{ opacity: 0.75; transform: scale(1.05); }
+}
+.card-tile.rarity-legendary .card-photo-wrap::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.75) 50%, transparent 65%);
+  background-size: 250% 250%;
+  animation: shineSweep 2.6s linear infinite;
+  pointer-events: none;
+}
+@keyframes shineSweep{
+  0%{ background-position: 0% 0%; }
+  100%{ background-position: 100% 100%; }
 }
 @keyframes legendaryShimmer{
   0%{ background-position: 0% 50%; }
   50%{ background-position: 100% 50%; }
   100%{ background-position: 0% 50%; }
 }
+
 .card-tile.locked{
   background: #EFE1D6;
   box-shadow: inset 0 2px 6px rgba(90,63,52,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .card-tile.locked .card-lock{ font-size: 1.5rem; opacity: 0.5; }
 
