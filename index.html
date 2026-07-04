@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Summi – Bärchen-Pflege 🧸</title>
+<meta name="theme-color" content="#F4A6A6" />
+<meta name="description" content="Kümmere dich um deinen kleinen Teddybären – füttern, waschen, spielen!" />
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" href="icon-192.png" />
+
+<!-- Rundliche, kindgerechte Schrift -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ===== Kopfbereich: Name + Statusleisten ===== -->
+  <header class="topbar">
+    <div class="bear-name">
+      <span class="bear-name-emoji">🧸</span>
+      <span id="bearNameText">Summi</span>
+    </div>
+    <div class="topbar-right">
+      <div class="strawberry-counter" id="strawberryCounter" title="Gesammelte Erdbeeren">
+        <span>🍓</span><span id="strawberryCount">0</span>
+      </div>
+      <div class="strawberry-counter coin-counter" id="coinCounter" title="Verdiente Coins">
+        <img src="coin_gold_bear.png" alt="Coin" class="coin-icon"><span id="coinCount">0</span>
+      </div>
+    </div>
+  </header>
+  <div class="topbar2">
+    <span class="build-badge" id="buildBadge"></span>
+    <span class="level-age" id="levelAgeText">Lvl 1 • Alter 0.0000</span>
+    <div class="topbar2-icons">
+      <button class="icon-btn" id="shopBtn" aria-label="Shop" title="Spielzeug-Shop">🛍️</button>
+      <button class="icon-btn" id="albumBtn" aria-label="Fotoalbum" title="Fotoalbum">📸</button>
+      <button class="icon-btn" id="infoBtn" aria-label="Info" title="Info">ℹ️</button>
+    </div>
+  </div>
+
+  <section class="stats" aria-label="Bärchen-Werte">
+    <div class="stat" data-stat="hunger">
+      <div class="stat-icon">🍓</div>
+      <div class="stat-bar"><div class="stat-fill" id="fill-hunger"></div></div>
+    </div>
+    <div class="stat" data-stat="clean">
+      <div class="stat-icon">🧼</div>
+      <div class="stat-bar"><div class="stat-fill" id="fill-clean"></div></div>
+    </div>
+    <div class="stat" data-stat="fun">
+      <div class="stat-icon">🎈</div>
+      <div class="stat-bar"><div class="stat-fill" id="fill-fun"></div></div>
+    </div>
+    <div class="stat stat-love" data-stat="love">
+      <div class="stat-icon">💗</div>
+      <div class="stat-bar"><div class="stat-fill" id="fill-love"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== Bühne: der Bär selbst ===== -->
+  <main class="stage" id="stage">
+
+    <div class="speech-bubble" id="speechBubble"><span id="speechText"></span></div>
+
+    <div class="bear-wrap" id="bearWrap">
+      <!-- Fliegen bei Schmutz -->
+      <div class="flies" id="flies"></div>
+
+      <!-- Herzchen / Sterne beim Streicheln -->
+      <div class="particles" id="particles"></div>
+
+      <!-- "Zzz"-Schlafblase -->
+      <div class="zzz" id="zzzBubble">💤</div>
+
+      <!-- Fernseh-Icon (nur sichtbar während Summi fernsieht) -->
+      <div class="tv-icon" id="tvIcon">📺</div>
+
+      <!-- Kleine Spiel-Animation während der Arbeit (schaukelt mit Spielzeug) -->
+      <div class="work-toy-icon" id="workToyIcon">🧸</div>
+
+      <!-- Fernseh-Dialog: "Darf ich fernsehen?" -->
+      <div class="tv-prompt hidden" id="tvPrompt">
+        <p>📺 Darf ich fernsehen?</p>
+        <div class="tv-prompt-buttons">
+          <button class="comfort-btn" id="tvYesBtn">Ja</button>
+          <button class="comfort-btn" id="tvNoBtn">Nein</button>
+        </div>
+      </div>
+
+      <svg id="bearSvg" viewBox="0 0 300 320" class="bear-svg" role="img" aria-label="Teddybär">
+        <!-- Ohren -->
+        <circle cx="95" cy="70" r="34" fill="#C4926E"/>
+        <circle cx="205" cy="70" r="34" fill="#C4926E"/>
+        <circle cx="95" cy="70" r="17" fill="#E8C4A8"/>
+        <circle cx="205" cy="70" r="17" fill="#E8C4A8"/>
+
+        <!-- Beine -->
+        <ellipse cx="120" cy="290" rx="30" ry="24" fill="#C4926E"/>
+        <ellipse cx="180" cy="290" rx="30" ry="24" fill="#C4926E"/>
+        <ellipse cx="120" cy="298" rx="20" ry="10" fill="#E8C4A8"/>
+        <ellipse cx="180" cy="298" rx="20" ry="10" fill="#E8C4A8"/>
+
+        <!-- Körper (Latzhose) -->
+        <rect x="90" y="185" width="120" height="95" rx="34" fill="#7FB3B8"/>
+        <rect x="112" y="170" width="16" height="40" rx="6" fill="#7FB3B8"/>
+        <rect x="172" y="170" width="16" height="40" rx="6" fill="#7FB3B8"/>
+        <circle cx="120" cy="215" r="5" fill="#5C4A42" opacity="0.5"/>
+        <circle cx="180" cy="215" r="5" fill="#5C4A42" opacity="0.5"/>
+
+        <!-- Rotes Lätzchen -->
+        <path d="M 128 172 Q 150 200 172 172 L 168 168 Q 150 188 132 168 Z" fill="#E2564F"/>
+        <path d="M 132 172 Q 150 192 168 172" fill="none" stroke="#C23F3F" stroke-width="2"/>
+        <circle cx="144" cy="181" r="2.4" fill="#FBEAE8"/>
+        <circle cx="156" cy="181" r="2.4" fill="#FBEAE8"/>
+        <circle cx="150" cy="188" r="2.4" fill="#FBEAE8"/>
+
+        <!-- Arme -->
+        <g id="armLeft">
+          <ellipse cx="78" cy="205" rx="24" ry="42" fill="#C4926E"/>
+          <ellipse cx="76" cy="238" rx="16" ry="14" fill="#E8C4A8"/>
+        </g>
+        <g id="armRight">
+          <ellipse cx="222" cy="205" rx="24" ry="42" fill="#C4926E"/>
+          <ellipse cx="224" cy="238" rx="16" ry="14" fill="#E8C4A8"/>
+        </g>
+
+        <!-- Bauch/Hemd unter der Latzhose -->
+        <ellipse cx="150" cy="190" rx="55" ry="30" fill="#F4C9A0"/>
+
+        <!-- Kopf -->
+        <circle cx="150" cy="120" r="72" fill="#D6A480"/>
+
+        <!-- Schnauze -->
+        <ellipse cx="150" cy="140" rx="40" ry="32" fill="#EED5BE"/>
+
+        <!-- Nase -->
+        <ellipse cx="150" cy="122" rx="15" ry="11" fill="#5A3F34"/>
+
+        <!-- Augen (werden per JS ausgetauscht) -->
+        <g id="eyeLeft"></g>
+        <g id="eyeRight"></g>
+
+        <!-- Wimpern (immer sichtbar) -->
+        <g stroke="#4A3730" stroke-width="2.2" stroke-linecap="round" fill="none">
+          <path d="M 112 103 L 106 96"/>
+          <path d="M 117 100 L 113 92"/>
+          <path d="M 123 99 L 122 91"/>
+          <path d="M 188 103 L 194 96"/>
+          <path d="M 183 100 L 187 92"/>
+          <path d="M 177 99 L 178 91"/>
+        </g>
+
+        <!-- Mund (wird per JS ausgetauscht) -->
+        <path id="mouth" d="" fill="none" stroke="#5A3F34" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- Offener Schlafmund + Sabbertropfen (nur sichtbar im Schlaf) -->
+        <ellipse id="mouthOpen" cx="150" cy="158" rx="9" ry="6" fill="#3D2A22" opacity="0"/>
+        <path id="droolDrop" d="M 161 163 q -4 9 0 15 q 4 -6 0 -15 Z" fill="#BFEFF5" opacity="0"/>
+
+        <!-- Wangen -->
+        <ellipse cx="108" cy="140" rx="12" ry="8" fill="#F0A9A0" opacity="0.55"/>
+        <ellipse cx="192" cy="140" rx="12" ry="8" fill="#F0A9A0" opacity="0.55"/>
+
+        <!-- Schmutzflecken -->
+        <g id="dirtSpots"></g>
+
+        <!-- Arbeits-Uniform (Asset: uniform_blue_action) – nur sichtbar, wenn Summi arbeitet -->
+        <g id="uniformOverlay">
+          <rect x="88" y="178" width="124" height="100" rx="32" fill="#16213A"/>
+          <rect x="88" y="178" width="26" height="100" rx="13" fill="#7EC8E3"/>
+          <rect x="186" y="178" width="26" height="100" rx="13" fill="#7EC8E3"/>
+          <path d="M 134 178 L 150 200 L 166 178 Z" fill="#16213A" stroke="#0E1626" stroke-width="2"/>
+          <path d="M 146 182 L 150 195 L 154 182 Z" fill="#E8935A"/>
+          <rect x="140" y="212" width="16" height="4" rx="2" fill="#7EC8E3" opacity="0.8"/>
+          <rect x="140" y="220" width="16" height="4" rx="2" fill="#7EC8E3" opacity="0.8"/>
+        </g>
+
+        <!-- Träne bei sehr trauriger Stimmung / beim Weinen -->
+        <path id="tear" d="" fill="#8FD3E8" opacity="0"/>
+        <path id="tear2" d="M 182 118 q -4 10 0 16 q 4 -6 0 -16 Z" fill="#8FD3E8" opacity="0"/>
+      </svg>
+
+      <!-- Seifenblasen-Animation beim Waschen -->
+      <div class="wash-fx" id="washFx"></div>
+
+      <!-- Trost-Buttons: nur sichtbar, wenn Summi weint -->
+      <div class="comfort-buttons" id="comfortButtons">
+        <button class="comfort-btn" id="btnKiss">😘 Kuss geben</button>
+        <button class="comfort-btn" id="btnSniff">👃 An ihm riechen</button>
+      </div>
+    </div>
+
+    <!-- Arbeits-Fortschrittsanzeige -->
+    <div class="work-banner hidden" id="workBanner">
+      <div class="work-label">💼 Summi arbeitet...</div>
+      <div class="work-bar"><div class="work-fill" id="workFill"></div></div>
+    </div>
+  </main>
+
+  <!-- ===== Aktionsleiste ===== -->
+  <footer class="actions">
+    <button class="action-btn" id="btnFeed" data-action="feed">
+      <span class="action-emoji">🍓🍞</span>
+      <span class="action-label">Füttern</span>
+    </button>
+    <button class="action-btn" id="btnDrink" data-action="drink">
+      <span class="action-emoji">☕</span>
+      <span class="action-label">Trinken</span>
+    </button>
+    <button class="action-btn" id="btnWash" data-action="wash">
+      <span class="action-emoji">🧴</span>
+      <span class="action-label">Waschen</span>
+    </button>
+    <button class="action-btn" id="btnPlay" data-action="play">
+      <span class="action-emoji">🎮</span>
+      <span class="action-label">Spielen</span>
+    </button>
+    <button class="action-btn" id="btnWork" data-action="work">
+      <span class="action-emoji">💼</span>
+      <span class="action-label">Arbeiten</span>
+    </button>
+    <button class="action-btn" id="btnSleep" data-action="sleep">
+      <span class="action-emoji">🛏️</span>
+      <span class="action-label" id="sleepBtnLabel">Ins Bett</span>
+    </button>
+  </footer>
+
+</div>
+
+<!-- ===== Minispiel-Overlay ===== -->
+<div class="overlay hidden" id="gameOverlay">
+  <div class="overlay-panel">
+    <button class="overlay-close" id="overlayClose" aria-label="Schließen">✕</button>
+
+    <!-- Spielauswahl -->
+    <div id="gameMenu" class="game-menu">
+      <h2>Womit möchtest du spielen?</h2>
+      <div class="game-cards">
+        <button class="game-card" data-game="car">
+          <div class="game-card-emoji">🚗</div>
+          <div class="game-card-title">Hügel-Fahrt</div>
+          <div class="game-card-desc">Gib Gas und meistere die Hügel!</div>
+        </button>
+        <button class="game-card" data-game="chase">
+          <div class="game-card-emoji">🍓</div>
+          <div class="game-card-title">Erdbeer-Jagd</div>
+          <div class="game-card-desc">Fang die wild hüpfende Erdbeere!</div>
+        </button>
+        <button class="game-card" data-game="harvest">
+          <div class="game-card-emoji">🕳️</div>
+          <div class="game-card-title">Erdbeer-Ernte</div>
+          <div class="game-card-desc">Tippe die Erdbeeren schnell an!</div>
+        </button>
+        <button class="game-card" data-game="runner">
+          <div class="game-card-emoji">🏃</div>
+          <div class="game-card-title">Hüpf-Lauf</div>
+          <div class="game-card-desc">Spring über die Hindernisse!</div>
+        </button>
+        <button class="game-card" data-game="figures">
+          <div class="game-card-emoji">🧸</div>
+          <div class="game-card-title">Figuren-Memory</div>
+          <div class="game-card-desc">Finde die passenden Spielzeug-Paare!</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Spielbildschirm -->
+    <div id="gameScreen" class="game-screen hidden">
+      <div class="game-hud">
+        <span id="gameTitle">Spiel</span>
+        <span id="gameScore">Punkte: 0</span>
+        <span id="gameTimer">⏱ 20</span>
+      </div>
+      <canvas id="gameCanvas" width="320" height="420"></canvas>
+      <div class="memory-grid hidden" id="memoryGrid"></div>
+      <div class="harvest-grid hidden" id="harvestGrid"></div>
+      <div class="chase-area hidden" id="chaseArea">
+        <button class="chase-target" id="chaseTarget">🍓</button>
+      </div>
+      <button class="jump-btn hidden" id="jumpBtn">⬆️ Springen</button>
+      <button class="jump-btn hidden" id="gasBtn">🚗 Gas!</button>
+      <p class="game-hint" id="gameHint">Tippe auf das Spielfeld!</p>
+      <p class="debug-line" id="debugLine"></p>
+    </div>
+
+    <!-- Ergebnisbildschirm -->
+    <div id="gameResult" class="game-result hidden">
+      <div class="result-emoji">🎉</div>
+      <h2 id="resultScore">Punkte: 0</h2>
+      <p id="resultFun">Spaß +0 💗</p>
+      <div class="result-buttons">
+        <button class="secondary-btn" id="resultBack">Zurück</button>
+        <button class="primary-btn" id="resultAgain">Nochmal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Info-Hilfe-Overlay ===== -->
+<div class="overlay hidden" id="infoOverlay">
+  <div class="overlay-panel">
+    <button class="overlay-close" id="infoClose" aria-label="Schließen">✕</button>
+    <h2 class="album-title">💛 Kleine Summi-Hilfe</h2>
+    <div class="info-list">
+      <div class="info-entry">
+        <div class="info-entry-title">😴 Einschlafen</div>
+        <div class="info-entry-text">Wenn Summi müde wird, leg ihn ins Bettchen. Er schläft dann friedlich ein.</div>
+      </div>
+      <div class="info-entry">
+        <div class="info-entry-title">😢 Weinen</div>
+        <div class="info-entry-text">Wenn er traurig ist, tröst ihn: an ihm riechen oder ihm einen Kuss geben.</div>
+      </div>
+      <div class="info-entry">
+        <div class="info-entry-title">🍓 Hungrig</div>
+        <div class="info-entry-text">Gib ihm etwas Leckeres zu essen, dann strahlt er wieder.</div>
+      </div>
+      <div class="info-entry">
+        <div class="info-entry-title">📺 Fernsehen</div>
+        <div class="info-entry-text">Manchmal möchte er fernsehen. Sag Ja oder Nein – beides ist okay, tröste ihn wenn nötig.</div>
+      </div>
+      <div class="info-entry">
+        <div class="info-entry-title">🤠 Freund vermissen</div>
+        <div class="info-entry-text">Wenn er nach seinem Cowboy-Freund fragt, such die Figur im Inventar und spiel mit ihr zusammen.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Spielzeug-Shop-Overlay ===== -->
+<div class="overlay hidden" id="shopOverlay">
+  <div class="overlay-panel">
+    <button class="overlay-close" id="shopClose" aria-label="Schließen">✕</button>
+    <h2 class="album-title">🛍️ Spielzeug-Shop</h2>
+    <p class="game-hint">Kaufe Spielzeug für mehr Spaß! Coins bekommst du fürs Arbeiten.</p>
+    <div class="shop-list" id="shopList"></div>
+    <h3 class="inventory-title">🎒 Inventar</h3>
+    <div class="inventory-list" id="inventoryList"></div>
+  </div>
+</div>
+
+<!-- ===== Foto-Album-Overlay (Diashow) ===== -->
+<div class="overlay hidden" id="albumOverlay">
+  <div class="overlay-panel">
+    <button class="overlay-close" id="albumClose" aria-label="Schließen">✕</button>
+    <h2 class="album-title">📸 Summis Fotoalbum</h2>
+    <p class="game-hint">Schalte echte Erinnerungsfotos von Summi mit gesammelten Erdbeeren frei!</p>
+    <div class="slideshow" id="photoSlideshow">
+      <button class="slide-arrow" id="slidePrev" aria-label="Zurück">‹</button>
+      <div class="slide-frame" id="slideFrame"></div>
+      <button class="slide-arrow" id="slideNext" aria-label="Weiter">›</button>
+    </div>
+    <div class="slide-counter" id="slideCounter">1 / 19</div>
+  </div>
+</div>
+
+<!-- ===== "Ohnmacht"-Overlay ===== -->
+<div class="overlay hidden" id="deathOverlay">
+  <div class="overlay-panel death-panel">
+    <div class="death-emoji">😵</div>
+    <h2>Summi ist ohnmächtig geworden!</h2>
+    <p>Er wurde zu lange nicht versorgt. Sammle 🍓 Erdbeeren, um ihn wieder aufzuwecken.</p>
+    <div class="death-progress">
+      <span id="deathStrawberryText">0 / 10 🍓</span>
+    </div>
+    <button class="primary-btn" id="reviveBtn" disabled>Wiederbeleben</button>
+    <p class="game-hint">Erdbeeren bekommst du im Erdbeer-Minispiel!</p>
+  </div>
+</div>
+
+<!-- ===== Toast-Hinweis ===== -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>

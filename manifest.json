@@ -1,0 +1,25 @@
+{
+  "name": "Bärchen-Pflege",
+  "short_name": "Bärchen",
+  "description": "Kümmere dich um deinen kleinen Teddybären – füttern, waschen, spielen!",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FDF6F0",
+  "theme_color": "#F4A6A6",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
