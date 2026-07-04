@@ -7,7 +7,7 @@
 // Build-Kennung zur Cache-Diagnose: taucht oben rechts in der App auf.
 // Wenn du nach einem Update immer noch eine ALTE Nummer siehst, wurde die
 // neue Version noch nicht geladen (Cache-Problem) statt eines echten Bugs.
-const BUILD_ID = "build-13";
+const BUILD_ID = "build-14";
 
 /* ---------------------------------------------------------------------
    0) GLOBALER FEHLER-FÄNGER (Diagnose)
@@ -75,10 +75,23 @@ let state = {
   love: 80,
   strawberries: 0,
   coins: 0,
-  toys: { piglet: 0, cowboy: 0, plush: 0 }, // gekauftes Spielzeug-Inventar
+  toys: { piglet: 0, cowboy: 0, plush: 0, ball: 0, kite: 0, yoyo: 0, blocks: 0 }, // gekauftes Spielzeug-Inventar
+  clothes: { bow: 0, scarf: 0, glasses: 0, hat: 0, cap: 0, flower: 0 }, // gekaufte Kleidung/Accessoires
+  equipped: { neck: null, eyes: null, head: null, ear: null }, // aktuell getragene Kleidung je Slot
   carePoints: 0, // Basis für Level & Alter
   isDead: false,
   unlockedPhotos: new Array(PHOTO_COUNT).fill(false),
+  stats: {
+    feeds: 0,
+    washes: 0,
+    worksDone: 0,
+    gamesPlayed: 0,
+    toysBought: 0,
+    clothesBought: 0,
+    strawberriesLifetime: 0,
+  },
+  dailyStreak: { count: 0, best: 0, lastClaim: null },
+  achievementsClaimed: {},
   lastSave: Date.now(),
 };
 
@@ -93,9 +106,25 @@ function loadState() {
       if (!Array.isArray(state.unlockedPhotos)) state.unlockedPhotos = [];
       while (state.unlockedPhotos.length < PHOTO_COUNT) state.unlockedPhotos.push(false);
       if (!state.toys) state.toys = { piglet: 0, cowboy: 0, plush: 0 };
-      for (const key of ["piglet", "cowboy", "plush"]) {
+      for (const key of ["piglet", "cowboy", "plush", "ball", "kite", "yoyo", "blocks"]) {
         if (typeof state.toys[key] !== "number") state.toys[key] = 0;
       }
+      if (!state.clothes) state.clothes = {};
+      for (const key of ["bow", "scarf", "glasses", "hat", "cap", "flower"]) {
+        if (typeof state.clothes[key] !== "number") state.clothes[key] = 0;
+      }
+      if (!state.equipped) state.equipped = { neck: null, eyes: null, head: null, ear: null };
+      for (const slot of ["neck", "eyes", "head", "ear"]) {
+        if (state.equipped[slot] === undefined) state.equipped[slot] = null;
+      }
+      if (!state.stats) state.stats = {};
+      for (const key of ["feeds", "washes", "worksDone", "gamesPlayed", "toysBought", "clothesBought", "strawberriesLifetime"]) {
+        if (typeof state.stats[key] !== "number") state.stats[key] = 0;
+      }
+      if (!state.dailyStreak) state.dailyStreak = { count: 0, best: 0, lastClaim: null };
+      if (typeof state.dailyStreak.count !== "number") state.dailyStreak.count = 0;
+      if (typeof state.dailyStreak.best !== "number") state.dailyStreak.best = 0;
+      if (!state.achievementsClaimed) state.achievementsClaimed = {};
       // Verfall seit letztem Besuch nachholen (nur wenn Summi noch lebt)
       if (!state.isDead) {
         const elapsedSec = Math.min(
@@ -121,6 +150,22 @@ function saveState() {
 
 function clamp(v) {
   return Math.max(0, Math.min(100, v));
+}
+
+// Kurzes haptisches Feedback auf Geräten, die es unterstützen (no-op sonst).
+function vibrate(ms) {
+  try {
+    if (navigator.vibrate) navigator.vibrate(ms);
+  } catch (e) {
+    /* egal, rein kosmetisch */
+  }
+}
+
+// Erdbeeren hinzufügen UND für Erfolge mitzählen (Lebenszeit-Gesamtsumme).
+function addStrawberries(n) {
+  if (!n) return;
+  state.strawberries += n;
+  state.stats.strawberriesLifetime += n;
 }
 
 /* ---------------------------------------------------------------------
@@ -480,12 +525,15 @@ function feed() {
   state.hunger = clamp(state.hunger + 30);
   state.love = clamp(state.love + 3);
   addCarePoints(CARE_POINTS.feed);
+  state.stats.feeds++;
   showToast("🍓🍞 Lecker, Toast mit Erdbeermarmelade!");
   spawnParticles("🍓", 4);
   wiggleBear();
+  vibrate(15);
   registerInteraction();
   renderAll();
   saveState();
+  checkAchievements();
 }
 
 function drink() {
@@ -516,9 +564,11 @@ function wash() {
   state.clean = 100;
   state.love = clamp(state.love + 5);
   addCarePoints(CARE_POINTS.wash);
+  state.stats.washes++;
   registerInteraction();
   renderAll();
   saveState();
+  checkAchievements();
   setTimeout(() => {
     el.bearWrap.classList.remove("washing");
     el.washFx.innerHTML = "";
@@ -755,10 +805,13 @@ function finishWork() {
   el.workBanner.classList.add("hidden");
   const earned = Math.floor(10 + Math.random() * 21); // 10-30 Coins
   state.coins += earned;
+  state.stats.worksDone++;
   showToast("💼 Feierabend! +" + earned + " Coins verdient!");
+  vibrate(20);
   registerInteraction();
   renderAll();
   saveState();
+  checkAchievements();
 }
 
 /* ---------------------------------------------------------------------
@@ -909,18 +962,36 @@ document.getElementById("albumBtn").addEventListener("click", openAlbum);
 document.getElementById("albumClose").addEventListener("click", closeAlbum);
 
 /* ---------------------------------------------------------------------
-   7e) SPIELZEUG-SHOP (mit Coins) & INVENTAR
+   7e) SPIELZEUG- & KLEIDUNG-SHOP (mit Coins) & INVENTAR
 --------------------------------------------------------------------- */
 // Generische Spielzeuge (bewusst KEINE geschützten Marken/Figuren verwendet).
 const TOYS = [
   { id: "piglet", emoji: "🐷", name: "Kuscheltier-Ferkel", desc: "Süßes kleines Ferkel zum Kuscheln", cost: 30, funGain: 15 },
   { id: "cowboy", emoji: "🤠", name: "Cowboy-Figur", desc: "Mutige Spielzeug-Figur für Abenteuer", cost: 60, funGain: 25 },
   { id: "plush", emoji: "🧸", name: "XXL-Kuscheltier", desc: "Riesiges, flauschiges Kuscheltier", cost: 120, funGain: 40 },
+  { id: "ball", emoji: "⚽", name: "Spielball", desc: "Zum Kicken und Werfen", cost: 25, funGain: 12 },
+  { id: "yoyo", emoji: "🪀", name: "Jo-Jo", desc: "Für flinke Tricks", cost: 20, funGain: 10 },
+  { id: "kite", emoji: "🪁", name: "Drachen", desc: "Steigt hoch in den Wind", cost: 55, funGain: 22 },
+  { id: "blocks", emoji: "🧩", name: "Bauklötze", desc: "Zum Türme bauen und Knobeln", cost: 45, funGain: 18 },
+];
+
+// Anziehbare Kleidung/Accessoires. "slot" bestimmt, welches SVG-Overlay
+// getauscht wird (nur ein Teil pro Slot gleichzeitig sichtbar).
+const CLOTHES = [
+  { id: "bow", slot: "neck", groupId: "accessoryBow", emoji: "🎀", name: "Fliege", desc: "Schick für besondere Anlässe", cost: 40, loveGain: 8 },
+  { id: "scarf", slot: "neck", groupId: "accessoryScarf", emoji: "🧣", name: "Schal", desc: "Kuschelig warm", cost: 35, loveGain: 6 },
+  { id: "glasses", slot: "eyes", groupId: "accessoryGlasses", emoji: "🕶️", name: "Brille", desc: "Cool und lässig", cost: 45, loveGain: 8 },
+  { id: "hat", slot: "head", groupId: "accessoryHat", emoji: "🎩", name: "Zylinder", desc: "Edel und vornehm", cost: 70, loveGain: 12 },
+  { id: "cap", slot: "head", groupId: "accessoryCap", emoji: "🧢", name: "Basecap", desc: "Sportlich-lässig", cost: 50, loveGain: 10 },
+  { id: "flower", slot: "ear", groupId: "accessoryFlower", emoji: "🌸", name: "Blümchen", desc: "Süß hinterm Ohr", cost: 25, loveGain: 5 },
 ];
 
 const shopOverlay = document.getElementById("shopOverlay");
 const shopList = document.getElementById("shopList");
 const inventoryList = document.getElementById("inventoryList");
+const inventoryTitle = document.getElementById("inventoryTitle");
+const shopTabHint = document.getElementById("shopTabHint");
+let shopActiveTab = "toys";
 
 function openShop() {
   shopOverlay.classList.remove("hidden");
@@ -931,7 +1002,27 @@ function closeShop() {
   shopOverlay.classList.add("hidden");
 }
 
+function setShopTab(tab) {
+  shopActiveTab = tab;
+  document.getElementById("shopTabToys").classList.toggle("active", tab === "toys");
+  document.getElementById("shopTabClothes").classList.toggle("active", tab === "clothes");
+  shopTabHint.textContent =
+    tab === "toys"
+      ? "Kaufe Spielzeug für mehr Spaß! Coins bekommst du fürs Arbeiten und in Minispielen."
+      : "Kleide Summi ein! Getragene Sachen sieht man direkt am Bären.";
+  inventoryTitle.textContent = tab === "toys" ? "🎒 Spielzeug-Inventar" : "🎒 Kleiderschrank";
+  renderShop();
+}
+
 function renderShop() {
+  if (shopActiveTab === "clothes") {
+    renderClothesShop();
+  } else {
+    renderToyShop();
+  }
+}
+
+function renderToyShop() {
   shopList.innerHTML = TOYS.map(
     (toy) => `
     <div class="shop-item">
@@ -950,10 +1041,10 @@ function renderShop() {
     btn.addEventListener("click", () => buyToy(btn.dataset.toy));
   });
 
-  renderInventory();
+  renderToyInventory();
 }
 
-function renderInventory() {
+function renderToyInventory() {
   const owned = TOYS.filter((t) => state.toys[t.id] > 0);
   if (owned.length === 0) {
     inventoryList.innerHTML = '<span class="inventory-empty">Noch kein Spielzeug gekauft.</span>';
@@ -964,35 +1055,58 @@ function renderInventory() {
       (t) => `
       <span class="inventory-item">
         ${t.emoji} ${t.name} ×${state.toys[t.id]}
-        <button class="inventory-play-btn" data-toy="${t.id}" title="Summi freut sich, wenn du das Spielzeug neben ihn legst!">▶️</button>
+        <button class="inventory-play-btn" data-toy="${t.id}" title="Zusammen mit Summi spielen!">▶️</button>
       </span>`
     )
     .join("");
   inventoryList.querySelectorAll(".inventory-play-btn").forEach((btn) => {
-    btn.addEventListener("click", () => playWithToy(btn.dataset.toy));
+    btn.addEventListener("click", () => openToyPlay(btn.dataset.toy));
   });
 }
 
-// Spielzeug "neben den Bären legen": löst eine kurze Freude-Animation aus.
-// Das Spielzeug selbst wird dabei nicht verändert/verbraucht, nur als Auslöser genutzt.
-function playWithToy(id) {
-  const toy = TOYS.find((t) => t.id === id);
-  if (!toy || !state.toys[id]) return;
-  state.fun = clamp(state.fun + 6);
-  state.love = clamp(state.love + 2);
-  addCarePoints(CARE_POINTS.play * 0.5);
-  el.bearWrap.classList.remove("joy-pop");
-  void el.bearWrap.offsetWidth;
-  el.bearWrap.classList.add("joy-pop");
-  spawnParticles(toy.emoji, 4);
-  spawnParticles("✨", 3);
-  if (id === "cowboy") {
-    showToast("🤠 Da bist du ja! Summi hat seinen Cowboy-Freund so vermisst!");
-  } else {
-    showToast(toy.emoji + " Summi freut sich über " + toy.name + "!");
+function renderClothesShop() {
+  shopList.innerHTML = CLOTHES.map(
+    (item) => `
+    <div class="shop-item">
+      <div class="shop-item-emoji">${item.emoji}</div>
+      <div class="shop-item-info">
+        <div class="shop-item-name">${item.name}</div>
+        <div class="shop-item-desc">${item.desc} · +${item.loveGain} 💗 Liebe</div>
+      </div>
+      <button class="shop-buy-btn" data-clothes="${item.id}" ${state.coins < item.cost ? "disabled" : ""}>
+        ${item.cost}<img src="coin_gold_bear.png" alt="Coins" class="coin-icon">
+      </button>
+    </div>`
+  ).join("");
+
+  shopList.querySelectorAll(".shop-buy-btn").forEach((btn) => {
+    btn.addEventListener("click", () => buyClothing(btn.dataset.clothes));
+  });
+
+  renderClothesInventory();
+}
+
+function renderClothesInventory() {
+  const owned = CLOTHES.filter((c) => state.clothes[c.id] > 0);
+  if (owned.length === 0) {
+    inventoryList.innerHTML = '<span class="inventory-empty">Noch keine Kleidung gekauft.</span>';
+    return;
   }
-  renderAll();
-  saveState();
+  inventoryList.innerHTML = owned
+    .map((c) => {
+      const worn = state.equipped[c.slot] === c.id;
+      return `
+      <span class="inventory-item">
+        ${c.emoji} ${c.name}
+        <button class="inventory-play-btn shop-equip-btn ${worn ? "is-worn" : ""}" data-clothes="${c.id}">
+          ${worn ? "Ausziehen" : "Anziehen"}
+        </button>
+      </span>`;
+    })
+    .join("");
+  inventoryList.querySelectorAll(".shop-equip-btn").forEach((btn) => {
+    btn.addEventListener("click", () => toggleEquip(btn.dataset.clothes));
+  });
 }
 
 function buyToy(id) {
@@ -1006,14 +1120,137 @@ function buyToy(id) {
   state.toys[id] = (state.toys[id] || 0) + 1;
   state.fun = clamp(state.fun + toy.funGain);
   state.love = clamp(state.love + 5);
+  state.stats.toysBought++;
   showToast(toy.emoji + " " + toy.name + " gekauft – Summi freut sich!");
+  vibrate(15);
   renderAll();
   saveState();
   renderShop();
+  checkAchievements();
+}
+
+function buyClothing(id) {
+  const item = CLOTHES.find((c) => c.id === id);
+  if (!item) return;
+  if (state.coins < item.cost) {
+    showToast("Noch nicht genug 🪙 Coins! Geh dafür arbeiten.");
+    return;
+  }
+  state.coins -= item.cost;
+  state.clothes[id] = (state.clothes[id] || 0) + 1;
+  state.love = clamp(state.love + item.loveGain);
+  state.stats.clothesBought++;
+  // Direkt anziehen, damit man den Kauf sofort am Bären sieht.
+  state.equipped[item.slot] = id;
+  showToast(item.emoji + " " + item.name + " gekauft – Summi trägt es direkt!");
+  vibrate(15);
+  renderAccessories();
+  renderAll();
+  saveState();
+  renderShop();
+  checkAchievements();
+}
+
+function toggleEquip(id) {
+  const item = CLOTHES.find((c) => c.id === id);
+  if (!item || !state.clothes[id]) return;
+  state.equipped[item.slot] = state.equipped[item.slot] === id ? null : id;
+  renderAccessories();
+  renderShop();
+  saveState();
+}
+
+// Blendet die passenden SVG-Overlays für aktuell getragene Kleidung ein/aus.
+function renderAccessories() {
+  CLOTHES.forEach((c) => {
+    const g = document.getElementById(c.groupId);
+    if (!g) return;
+    g.classList.toggle("hidden-acc", state.equipped[c.slot] !== c.id);
+  });
 }
 
 document.getElementById("shopBtn").addEventListener("click", openShop);
 document.getElementById("shopClose").addEventListener("click", closeShop);
+document.getElementById("shopTabToys").addEventListener("click", () => setShopTab("toys"));
+document.getElementById("shopTabClothes").addEventListener("click", () => setShopTab("clothes"));
+
+/* ---------------------------------------------------------------------
+   7f) MIT SPIELZEUG SPIELEN (interaktive Tipp-Session statt Kurz-Animation)
+--------------------------------------------------------------------- */
+const toyPlayOverlay = document.getElementById("toyPlayOverlay");
+const toyPlayStage = document.getElementById("toyPlayStage");
+const toyPlayFill = document.getElementById("toyPlayFill");
+const TOY_PLAY_DURATION = 6; // Sekunden
+let toyPlayState = null;
+let toyPlayTimerInterval = null;
+let toyPlayCurrentId = null;
+
+function openToyPlay(id) {
+  const toy = TOYS.find((t) => t.id === id);
+  if (!toy || !state.toys[id]) return;
+  if (actionsBlocked()) return;
+  registerInteraction();
+  toyPlayCurrentId = id;
+  document.getElementById("toyPlayTitle").textContent = toy.emoji + " Spielen mit " + toy.name;
+  document.getElementById("toyPlayToyIcon").textContent = toy.emoji;
+  document.getElementById("toyPlayHint").textContent =
+    "Tippe schnell auf Summi, damit er richtig Spaß mit " + toy.name + " hat!";
+  toyPlayState = { taps: 0, timeLeft: TOY_PLAY_DURATION };
+  toyPlayFill.style.width = "0%";
+  toyPlayOverlay.classList.remove("hidden");
+
+  clearInterval(toyPlayTimerInterval);
+  toyPlayTimerInterval = setInterval(() => {
+    if (!toyPlayState) return;
+    toyPlayState.timeLeft -= 1;
+    if (toyPlayState.timeLeft <= 0) finishToyPlay();
+  }, 1000);
+}
+
+function tapToyPlay() {
+  if (!toyPlayState) return;
+  toyPlayState.taps++;
+  const pct = Math.min(100, (toyPlayState.taps / 18) * 100);
+  toyPlayFill.style.width = pct + "%";
+  toyPlayStage.classList.remove("bounce");
+  void toyPlayStage.offsetWidth;
+  toyPlayStage.classList.add("bounce");
+  const toy = TOYS.find((t) => t.id === toyPlayCurrentId);
+  if (toy && toyPlayState.taps % 3 === 0) spawnParticles(toy.emoji, 2);
+  vibrate(8);
+}
+
+function finishToyPlay() {
+  clearInterval(toyPlayTimerInterval);
+  toyPlayOverlay.classList.add("hidden");
+  if (!toyPlayState) return;
+  const toy = TOYS.find((t) => t.id === toyPlayCurrentId);
+  const taps = toyPlayState.taps;
+  toyPlayState = null;
+  if (!toy) return;
+
+  const funGain = clamp(Math.min(30, 8 + taps * 1.3));
+  const loveGain = clamp(Math.min(15, 3 + taps * 0.4));
+  state.fun = clamp(state.fun + funGain);
+  state.love = clamp(state.love + loveGain);
+  addCarePoints(CARE_POINTS.play * 0.5);
+  spawnParticles("✨", 4);
+  if (toy.id === "cowboy") {
+    showToast("🤠 Da bist du ja! Summi hat seinen Cowboy-Freund so vermisst! (+" + Math.round(funGain) + " 🎈)");
+  } else {
+    showToast(toy.emoji + " Summi hatte riesigen Spaß mit " + toy.name + "! (+" + Math.round(funGain) + " 🎈)");
+  }
+  vibrate(30);
+  registerInteraction(true);
+  renderAll();
+  saveState();
+}
+
+document.getElementById("toyPlayClose").addEventListener("click", finishToyPlay);
+toyPlayStage.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  tapToyPlay();
+});
 
 function startTickLoop() {
   setInterval(() => {
@@ -1023,6 +1260,170 @@ function startTickLoop() {
 
   setInterval(saveState, 5000);
 }
+
+/* ---------------------------------------------------------------------
+   7g) TÄGLICHE BELOHNUNG (Login-Serie) & ERFOLGE
+--------------------------------------------------------------------- */
+const DAILY_REWARDS = [
+  { coins: 10, strawberries: 0 },
+  { coins: 15, strawberries: 1 },
+  { coins: 20, strawberries: 1 },
+  { coins: 25, strawberries: 2 },
+  { coins: 30, strawberries: 2 },
+  { coins: 40, strawberries: 3 },
+  { coins: 60, strawberries: 5 }, // Tag 7: großer Bonus
+];
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function canClaimDailyReward() {
+  return state.dailyStreak.lastClaim !== todayStr();
+}
+
+function claimDailyReward() {
+  if (!canClaimDailyReward()) {
+    showToast("🏆 Heute schon abgeholt – komm morgen wieder!");
+    return;
+  }
+  const today = todayStr();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (state.dailyStreak.lastClaim === yesterday) {
+    state.dailyStreak.count++;
+  } else {
+    state.dailyStreak.count = 1; // Serie verpasst -> neu beginnen
+  }
+  state.dailyStreak.lastClaim = today;
+  state.dailyStreak.best = Math.max(state.dailyStreak.best, state.dailyStreak.count);
+
+  const cycleDay = ((state.dailyStreak.count - 1) % 7) + 1;
+  const reward = DAILY_REWARDS[cycleDay - 1];
+  state.coins += reward.coins;
+  addStrawberries(reward.strawberries);
+  showToast(
+    "🎁 Tag " + state.dailyStreak.count + ": +" + reward.coins + " Coins" +
+    (reward.strawberries ? " +" + reward.strawberries + " 🍓" : "") + "!"
+  );
+  spawnParticles("🎉", 5);
+  vibrate(30);
+  renderAll();
+  saveState();
+  renderDailyReward();
+  checkAchievements();
+  document.getElementById("questBtn").classList.toggle("has-badge", canClaimDailyReward());
+}
+
+function renderDailyReward() {
+  const textEl = document.getElementById("dailyStreakText");
+  const rowEl = document.getElementById("dailyStreakRow");
+  const claimBtn = document.getElementById("dailyClaimBtn");
+  if (!textEl) return;
+
+  const cycleDay = ((Math.max(state.dailyStreak.count, 1) - 1) % 7) + 1;
+  textEl.textContent = "Serie: Tag " + state.dailyStreak.count + " (bester Streak: " + state.dailyStreak.best + ")";
+
+  rowEl.innerHTML = Array.from({ length: 7 }, (_, i) => {
+    const dayNum = i + 1;
+    const claimedInCycle = dayNum < cycleDay || (dayNum === cycleDay && !canClaimDailyReward());
+    const isToday = dayNum === cycleDay;
+    return `<div class="daily-day ${claimedInCycle ? "claimed" : ""} ${isToday ? "today" : ""}">${dayNum}</div>`;
+  }).join("");
+
+  if (canClaimDailyReward()) {
+    claimBtn.disabled = false;
+    claimBtn.textContent = "🎁 Belohnung abholen";
+  } else {
+    claimBtn.disabled = true;
+    claimBtn.textContent = "✅ Heute schon abgeholt";
+  }
+}
+
+// Erfolge: einmalige Coin-/Erdbeer-Belohnungen bei Meilensteinen.
+const ACHIEVEMENTS = [
+  { id: "feed1", icon: "🍓", title: "Erster Bissen", desc: "Füttere Summi einmal.", target: 1, get: (s) => s.feeds, reward: { coins: 5, strawberries: 0 } },
+  { id: "feed25", icon: "🍞", title: "Vielfraß", desc: "Füttere Summi 25 Mal.", target: 25, get: (s) => s.feeds, reward: { coins: 35, strawberries: 0 } },
+  { id: "wash15", icon: "🧼", title: "Sauberkeitsfan", desc: "Wasche Summi 15 Mal.", target: 15, get: (s) => s.washes, reward: { coins: 25, strawberries: 0 } },
+  { id: "work10", icon: "💼", title: "Fleißige Pfoten", desc: "Schließe 10 Arbeitsschichten ab.", target: 10, get: (s) => s.worksDone, reward: { coins: 50, strawberries: 0 } },
+  { id: "games10", icon: "🎮", title: "Spielefuchs", desc: "Spiele 10 Minispiel-Runden.", target: 10, get: (s) => s.gamesPlayed, reward: { coins: 40, strawberries: 0 } },
+  { id: "games30", icon: "🏆", title: "Highscore-Jäger", desc: "Spiele 30 Minispiel-Runden.", target: 30, get: (s) => s.gamesPlayed, reward: { coins: 90, strawberries: 0 } },
+  { id: "berries50", icon: "🍓", title: "Erdbeer-Sammler", desc: "Sammle insgesamt 50 Erdbeeren.", target: 50, get: (s) => s.strawberriesLifetime, reward: { coins: 30, strawberries: 5 } },
+  { id: "toys3", icon: "🧸", title: "Spielzeug-Sammler", desc: "Besitze 3 verschiedene Spielzeuge.", target: 3, get: (s) => s.toyVariety, reward: { coins: 45, strawberries: 0 } },
+  { id: "clothes3", icon: "👒", title: "Modebewusst", desc: "Besitze 3 Kleidungsstücke.", target: 3, get: (s) => s.clothesVariety, reward: { coins: 45, strawberries: 0 } },
+  { id: "photos5", icon: "📸", title: "Fototalent", desc: "Schalte 5 Erinnerungsfotos frei.", target: 5, get: (s) => s.photosUnlocked, reward: { coins: 35, strawberries: 0 } },
+  { id: "streak7", icon: "📅", title: "Wochentreue", desc: "Hol 7 Tage in Folge die tägliche Belohnung ab.", target: 7, get: (s) => s.streakBest, reward: { coins: 100, strawberries: 10 } },
+];
+
+function statsSnapshot() {
+  return {
+    feeds: state.stats.feeds,
+    washes: state.stats.washes,
+    worksDone: state.stats.worksDone,
+    gamesPlayed: state.stats.gamesPlayed,
+    strawberriesLifetime: state.stats.strawberriesLifetime,
+    toyVariety: TOYS.filter((t) => state.toys[t.id] > 0).length,
+    clothesVariety: CLOTHES.filter((c) => state.clothes[c.id] > 0).length,
+    photosUnlocked: state.unlockedPhotos.filter(Boolean).length,
+    streakBest: state.dailyStreak.best,
+  };
+}
+
+function checkAchievements() {
+  const snap = statsSnapshot();
+  let unlockedAny = false;
+  for (const a of ACHIEVEMENTS) {
+    if (state.achievementsClaimed[a.id]) continue;
+    if (a.get(snap) >= a.target) {
+      state.achievementsClaimed[a.id] = true;
+      state.coins += a.reward.coins;
+      addStrawberries(a.reward.strawberries);
+      showToast(
+        "🏅 Erfolg freigeschaltet: " + a.title + " (+" + a.reward.coins + " Coins" +
+        (a.reward.strawberries ? " +" + a.reward.strawberries + " 🍓" : "") + ")"
+      );
+      spawnParticles("🏅", 4);
+      vibrate(30);
+      unlockedAny = true;
+    }
+  }
+  if (unlockedAny) {
+    renderAll();
+    saveState();
+  }
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const listEl = document.getElementById("achievementList");
+  if (!listEl) return;
+  const snap = statsSnapshot();
+  listEl.innerHTML = ACHIEVEMENTS.map((a) => {
+    const done = !!state.achievementsClaimed[a.id];
+    const progress = Math.min(a.target, a.get(snap));
+    const pct = Math.round((progress / a.target) * 100);
+    return `
+      <div class="achievement-item ${done ? "done" : ""}">
+        <div class="achievement-icon">${a.icon}</div>
+        <div class="achievement-info">
+          <div class="achievement-title">${a.title}</div>
+          <div class="achievement-desc">${a.desc} (${progress}/${a.target})</div>
+          <div class="achievement-progress-bar"><div class="achievement-progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="achievement-check">${done ? "✅" : ""}</div>
+      </div>`;
+  }).join("");
+}
+
+const questOverlay = document.getElementById("questOverlay");
+document.getElementById("questBtn").addEventListener("click", () => {
+  questOverlay.classList.remove("hidden");
+  renderDailyReward();
+  renderAchievements();
+});
+document.getElementById("questClose").addEventListener("click", () => {
+  questOverlay.classList.add("hidden");
+});
+document.getElementById("dailyClaimBtn").addEventListener("click", claimDailyReward);
 
 /* ---------------------------------------------------------------------
    9) MINISPIELE
@@ -1038,6 +1439,7 @@ const memoryGrid = document.getElementById("memoryGrid");
 const harvestGrid = document.getElementById("harvestGrid");
 const chaseArea = document.getElementById("chaseArea");
 const chaseTarget = document.getElementById("chaseTarget");
+const simonGrid = document.getElementById("simonGrid");
 const gameTitleEl = document.getElementById("gameTitle");
 const gameScoreEl = document.getElementById("gameScore");
 const gameTimerEl = document.getElementById("gameTimer");
@@ -1060,6 +1462,7 @@ function closeGameOverlay() {
   stopGameLoop();
   stopHarvestGame();
   stopChaseGame();
+  stopSimonGame();
   overlayPanel.classList.remove("no-scroll");
   overlay.classList.add("hidden");
 }
@@ -1068,6 +1471,7 @@ function showMenu() {
   stopGameLoop();
   stopHarvestGame();
   stopChaseGame();
+  stopSimonGame();
   overlayPanel.classList.remove("no-scroll");
   gameMenu.classList.remove("hidden");
   gameScreen.classList.add("hidden");
@@ -1084,12 +1488,14 @@ function startGame(key) {
   gameResult.classList.add("hidden");
   gameScreen.classList.remove("hidden");
   overlayPanel.classList.add("no-scroll"); // verhindert iOS-Scroll-Bug über dem Canvas
+  document.getElementById("debugLine").textContent = ""; // alte Debug-Zeile nicht ins neue Spiel mitschleppen
 
   if (key === "figures") {
     canvas.classList.add("hidden");
     memoryGrid.classList.remove("hidden");
     harvestGrid.classList.add("hidden");
     chaseArea.classList.add("hidden");
+    simonGrid.classList.add("hidden");
     jumpBtn.classList.add("hidden");
     gasBtn.classList.add("hidden");
     gameTitleEl.textContent = "🧸 Figuren-Memory";
@@ -1103,6 +1509,7 @@ function startGame(key) {
     memoryGrid.classList.add("hidden");
     harvestGrid.classList.remove("hidden");
     chaseArea.classList.add("hidden");
+    simonGrid.classList.add("hidden");
     jumpBtn.classList.add("hidden");
     gasBtn.classList.add("hidden");
     gameTitleEl.textContent = "🍓 Erdbeer-Ernte";
@@ -1116,6 +1523,7 @@ function startGame(key) {
     memoryGrid.classList.add("hidden");
     harvestGrid.classList.add("hidden");
     chaseArea.classList.remove("hidden");
+    simonGrid.classList.add("hidden");
     jumpBtn.classList.add("hidden");
     gasBtn.classList.add("hidden");
     gameTitleEl.textContent = "🍓 Erdbeer-Jagd";
@@ -1124,9 +1532,24 @@ function startGame(key) {
     return;
   }
 
+  if (key === "simon") {
+    canvas.classList.add("hidden");
+    memoryGrid.classList.add("hidden");
+    harvestGrid.classList.add("hidden");
+    chaseArea.classList.add("hidden");
+    simonGrid.classList.remove("hidden");
+    jumpBtn.classList.add("hidden");
+    gasBtn.classList.add("hidden");
+    gameTitleEl.textContent = "🎵 Melodie-Merker";
+    gameHintEl.textContent = "Schau genau hin und tippe die Reihenfolge nach!";
+    startSimonGame();
+    return;
+  }
+
   memoryGrid.classList.add("hidden");
   harvestGrid.classList.add("hidden");
   chaseArea.classList.add("hidden");
+  simonGrid.classList.add("hidden");
   canvas.classList.remove("hidden");
   jumpBtn.classList.toggle("hidden", key !== "runner");
   gasBtn.classList.toggle("hidden", key !== "car");
@@ -1244,17 +1667,20 @@ function rollBonusCoins(scoreRatio) {
 function showResult(scoreText, funGain, strawberryGain = 0) {
   state.fun = clamp(state.fun + funGain);
   state.love = clamp(state.love + 4);
-  state.strawberries += strawberryGain;
+  addStrawberries(strawberryGain);
   addCarePoints(CARE_POINTS.play);
+  state.stats.gamesPlayed++;
 
   // Gestaffelter Coin-Bonus abhängig vom Abschneiden im Minispiel
   const scoreRatio = Math.min(1, funGain / 30);
   const bonusCoins = rollBonusCoins(scoreRatio);
   state.coins += bonusCoins;
 
+  vibrate(25);
   registerInteraction(true); // müde vom Spielen -> schläft bald ein
   renderAll();
   saveState();
+  checkAchievements();
 
   document.getElementById("resultScore").textContent = scoreText;
   document.getElementById("resultFun").textContent =
@@ -1644,7 +2070,88 @@ const runnerGame = {
   },
 };
 
-const GAMES = { car: carGame, runner: runnerGame };
+/* ---- Spiel 7: Ballon-Fang (fallende/steigende Ziele im Canvas) ---- */
+const BALLOON_EMOJIS = ["🎈", "🎈", "🎈", "🐝"]; // Bienen seltener treffen -> 1 von 4
+const balloonGame = {
+  title: "🎈 Ballon-Fang",
+  hint: "Tippe die Ballons an, bevor sie wegfliegen – meide die Bienen! 🐝",
+  timeLimit: 22,
+  balloons: [],
+  spawnTimer: 0,
+  effects: [],
+  init() {
+    this.balloons = [];
+    this.spawnTimer = 0.2;
+    this.effects = [];
+  },
+  update(dt) {
+    this.spawnTimer -= dt;
+    if (this.spawnTimer <= 0) {
+      this.spawnTimer = 0.55 + Math.random() * 0.4;
+      const isBee = Math.random() < 0.22;
+      this.balloons.push({
+        x: 30 + Math.random() * (canvas.width - 60),
+        y: canvas.height + 20,
+        vy: -(70 + Math.random() * 50 + runtime.elapsed * 2),
+        emoji: isBee ? "🐝" : BALLOON_EMOJIS[Math.floor(Math.random() * 3)],
+        isBee,
+        popped: false,
+        r: 22,
+      });
+    }
+    for (const b of this.balloons) {
+      b.y += b.vy * dt;
+    }
+    this.balloons = this.balloons.filter((b) => !b.popped && b.y > -30);
+    this.effects = updateTapEffects(this.effects, dt);
+  },
+  draw(c) {
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    drawSky(c);
+    c.font = "34px \"Apple Color Emoji\",\"Segoe UI Emoji\",\"Noto Color Emoji\",serif";
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    for (const b of this.balloons) {
+      c.fillText(b.emoji, b.x, b.y);
+      // Kleine Schnur unter dem Ballon (nicht bei der Biene)
+      if (!b.isBee) {
+        c.strokeStyle = "rgba(140,100,80,0.4)";
+        c.lineWidth = 1.5;
+        c.beginPath();
+        c.moveTo(b.x, b.y + 16);
+        c.lineTo(b.x, b.y + 26);
+        c.stroke();
+      }
+    }
+    drawTapEffects(c, this.effects);
+  },
+  onPointerDown(x, y) {
+    let hitAny = false;
+    for (const b of this.balloons) {
+      if (b.popped) continue;
+      const dist = Math.hypot(b.x - x, b.y - y);
+      if (dist < b.r + 10) {
+        b.popped = true;
+        hitAny = true;
+        if (b.isBee) {
+          runtime.score = Math.max(0, runtime.score - 2);
+          showToast("🐝 Autsch, das war eine Biene!");
+          addTapEffect(this.effects, x, y, false);
+        } else {
+          runtime.score++;
+          addTapEffect(this.effects, x, y, true);
+        }
+        break;
+      }
+    }
+    if (!hitAny) addTapEffect(this.effects, x, y, false);
+  },
+  rewardFromScore(score) {
+    return Math.min(30, Math.max(0, score * 2));
+  },
+};
+
+const GAMES = { car: carGame, runner: runnerGame, balloon: balloonGame };
 
 /* ---- Spiel 4: Figuren-Memory (generische Spielzeug-Icons, keine Marken) ---- */
 const MEMORY_ICONS = ["🚀", "🤠", "🐷", "🐮", "🐔", "🚂"];
@@ -1870,7 +2377,8 @@ function moveChaseTarget() {
 function tapChaseTarget() {
   if (!chaseState) return;
   chaseState.score++;
-  state.strawberries += 1; // sofort im Erdbeer-Inventar gutschreiben
+  addStrawberries(1); // sofort im Erdbeer-Inventar gutschreiben
+  vibrate(10);
   gameScoreEl.classList.remove("pulse");
   void gameScoreEl.offsetWidth;
   gameScoreEl.classList.add("pulse");
@@ -1897,6 +2405,100 @@ function stopChaseGame() {
 }
 
 chaseTarget.addEventListener("click", tapChaseTarget);
+
+/* ---- Spiel 8: Melodie-Merker (Simon-Stil, DOM-basiert) ---- */
+const SIMON_PAD_COUNT = 4;
+const SIMON_MAX_ROUNDS = 14; // danach gilt es als "gewonnen" (Highscore-Deckel)
+let simonState = null;
+let simonPlaybackTimeout = null;
+
+const simonPads = Array.from(simonGrid.querySelectorAll(".simon-pad"));
+
+function startSimonGame() {
+  simonState = { sequence: [], playerStep: 0, round: 0, accepting: false };
+  gameScoreEl.textContent = "Runde: 0";
+  gameTimerEl.textContent = "";
+  simonNextRound();
+}
+
+function simonNextRound() {
+  if (!simonState) return;
+  simonState.round++;
+  simonState.sequence.push(Math.floor(Math.random() * SIMON_PAD_COUNT));
+  simonState.playerStep = 0;
+  simonState.accepting = false;
+  gameScoreEl.textContent = "Runde: " + simonState.round;
+  gameScoreEl.classList.remove("pulse");
+  void gameScoreEl.offsetWidth;
+  gameScoreEl.classList.add("pulse");
+  playSimonSequence();
+}
+
+function playSimonSequence() {
+  clearTimeout(simonPlaybackTimeout);
+  let i = 0;
+  const step = () => {
+    if (!simonState) return;
+    if (i >= simonState.sequence.length) {
+      simonState.accepting = true;
+      return;
+    }
+    const padIdx = simonState.sequence[i];
+    litSimonPad(padIdx);
+    i++;
+    simonPlaybackTimeout = setTimeout(step, 650);
+  };
+  simonPlaybackTimeout = setTimeout(step, 500);
+}
+
+function litSimonPad(idx) {
+  const pad = simonPads[idx];
+  if (!pad) return;
+  pad.classList.add("lit");
+  setTimeout(() => pad.classList.remove("lit"), 380);
+}
+
+function tapSimonPad(idx) {
+  if (!simonState || !simonState.accepting) return;
+  litSimonPad(idx);
+  vibrate(10);
+  const expected = simonState.sequence[simonState.playerStep];
+  if (idx !== expected) {
+    finishSimonGame(false);
+    return;
+  }
+  simonState.playerStep++;
+  if (simonState.playerStep >= simonState.sequence.length) {
+    simonState.accepting = false;
+    if (simonState.round >= SIMON_MAX_ROUNDS) {
+      finishSimonGame(true);
+    } else {
+      setTimeout(simonNextRound, 700);
+    }
+  }
+}
+
+function finishSimonGame(won) {
+  clearTimeout(simonPlaybackTimeout);
+  const rounds = simonState ? simonState.round - (won ? 0 : 1) : 0;
+  simonState = null;
+  const funGain = Math.min(30, Math.max(2, rounds * 3));
+  const strawberryGain = Math.min(6, Math.floor(rounds / 2));
+  showResult(
+    won ? "🎉 Alle " + SIMON_MAX_ROUNDS + " Runden gemeistert!" : "Geschafft bis Runde " + rounds,
+    funGain,
+    strawberryGain
+  );
+}
+
+function stopSimonGame() {
+  clearTimeout(simonPlaybackTimeout);
+  simonState = null;
+}
+
+simonPads.forEach((pad, idx) => {
+  pad.addEventListener("click", () => tapSimonPad(idx));
+});
 
 function drawSky(c) {
   const grad = c.createLinearGradient(0, 0, 0, canvas.height);
@@ -1938,20 +2540,75 @@ document.getElementById("infoClose").addEventListener("click", () => {
 });
 
 /* ---------------------------------------------------------------------
-   11) SERVICE WORKER (PWA) – VORÜBERGEHEND DEAKTIVIERT
-   Zur Fehlersuche wird der Service Worker komplett entfernt (alte
-   Registrierungen abgemeldet, alte Caches gelöscht). So laden wir
-   garantiert immer die neueste Version direkt vom Server, ohne dass ein
-   alter Cache dazwischenfunken kann. Sobald alles zuverlässig läuft,
-   kann die PWA-Installierbarkeit wieder aktiviert werden.
+   11) SERVICE WORKER & "ALS APP INSTALLIEREN"
+   Der Service Worker macht die App offline-fähig und ist Voraussetzung
+   dafür, dass Handys/Desktop-Browser "Zum Startbildschirm hinzufügen"
+   bzw. "App installieren" anbieten. sw.js selbst arbeitet mit einer
+   Netzwerk-zuerst-Strategie, damit Updates trotzdem sofort ankommen.
 --------------------------------------------------------------------- */
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then((regs) => {
-    regs.forEach((reg) => reg.unregister());
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch((err) => {
+      console.warn("Service-Worker-Registrierung fehlgeschlagen:", err);
+    });
   });
 }
-if ("caches" in window) {
-  caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
+
+function isStandaloneDisplay() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+function isIOSDevice() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+
+const installBtn = document.getElementById("installBtn");
+const installOverlay = document.getElementById("installOverlay");
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (!isStandaloneDisplay()) installBtn.classList.remove("hidden");
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  installBtn.classList.add("hidden");
+  showToast("🎉 SummiCare wurde installiert!");
+});
+
+function openInstallOverlay() {
+  const ios = isIOSDevice();
+  document.getElementById("installIosSteps").classList.toggle("hidden", !ios);
+  document.getElementById("installGenericHint").classList.toggle("hidden", ios);
+  document.getElementById("installNowBtn").classList.toggle("hidden", !deferredInstallPrompt);
+  installOverlay.classList.remove("hidden");
+}
+
+function handleInstallClick() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => {
+      deferredInstallPrompt = null;
+    });
+    return;
+  }
+  openInstallOverlay();
+}
+
+installBtn.addEventListener("click", handleInstallClick);
+document.getElementById("installNowBtn").addEventListener("click", handleInstallClick);
+document.getElementById("installClose").addEventListener("click", () => {
+  installOverlay.classList.add("hidden");
+});
+
+// iOS bietet kein beforeinstallprompt-Ereignis – Button dort immer anzeigen,
+// solange die App noch nicht als installierte PWA läuft.
+if (isIOSDevice() && !isStandaloneDisplay()) {
+  installBtn.classList.remove("hidden");
 }
 
 document.getElementById("reviveBtn").addEventListener("click", reviveSummi);
@@ -1964,10 +2621,13 @@ console.log("Bärchen-Pflege gestartet –", BUILD_ID);
 
 loadState();
 renderAll();
+renderAccessories();
 saveState();
 startTickLoop();
 scheduleSpeech(true);
 scheduleTV();
+checkAchievements();
+document.getElementById("questBtn").classList.toggle("has-badge", canClaimDailyReward());
 if (state.isDead) {
   showDeathOverlay();
 } else {

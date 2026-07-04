@@ -1,0 +1,14 @@
+[build]
+  publish = "."
+
+# Der Service Worker muss immer frisch geladen werden, sonst bekommen
+# Nutzer:innen nach einem Update nicht mit, dass es eine neue Version gibt.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "no-cache"

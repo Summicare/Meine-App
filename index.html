@@ -11,6 +11,10 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <link rel="icon" href="icon-192.png" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="SummiCare" />
 
 <!-- Rundliche, kindgerechte Schrift -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -41,9 +45,11 @@
     <span class="build-badge" id="buildBadge"></span>
     <span class="level-age" id="levelAgeText">Lvl 1 • Alter 0.0000</span>
     <div class="topbar2-icons">
+      <button class="icon-btn" id="questBtn" aria-label="Erfolge" title="Tägliche Belohnung &amp; Erfolge">🏆</button>
       <button class="icon-btn" id="shopBtn" aria-label="Shop" title="Spielzeug-Shop">🛍️</button>
       <button class="icon-btn" id="albumBtn" aria-label="Fotoalbum" title="Fotoalbum">📸</button>
       <button class="icon-btn" id="infoBtn" aria-label="Info" title="Info">ℹ️</button>
+      <button class="icon-btn hidden" id="installBtn" aria-label="App installieren" title="Als App installieren">📲</button>
     </div>
   </div>
 
@@ -187,6 +193,40 @@
         <!-- Träne bei sehr trauriger Stimmung / beim Weinen -->
         <path id="tear" d="" fill="#8FD3E8" opacity="0"/>
         <path id="tear2" d="M 182 118 q -4 10 0 16 q 4 -6 0 -16 Z" fill="#8FD3E8" opacity="0"/>
+
+        <!-- ===== Anziehbare Kleidung/Accessoires (per JS ein-/ausgeblendet) ===== -->
+        <g id="accessoryScarf" class="accessory hidden-acc">
+          <path d="M 96 178 Q 150 200 204 178 L 204 192 Q 150 214 96 192 Z" fill="#E2564F"/>
+          <path d="M 140 205 L 132 236 L 150 226 Z" fill="#C23F3F"/>
+          <path d="M 160 205 L 168 232 L 150 224 Z" fill="#E2564F"/>
+        </g>
+        <g id="accessoryBow" class="accessory hidden-acc">
+          <path d="M 150 186 L 128 172 Q 122 186 128 200 Z" fill="#7FB3B8"/>
+          <path d="M 150 186 L 172 172 Q 178 186 172 200 Z" fill="#5FA3A8"/>
+          <circle cx="150" cy="186" r="7" fill="#5C4A42"/>
+        </g>
+        <g id="accessoryGlasses" class="accessory hidden-acc">
+          <circle cx="120" cy="112" r="19" fill="none" stroke="#4A3730" stroke-width="4"/>
+          <circle cx="180" cy="112" r="19" fill="none" stroke="#4A3730" stroke-width="4"/>
+          <path d="M 139 112 L 161 112" stroke="#4A3730" stroke-width="4"/>
+          <path d="M 101 108 L 90 100" stroke="#4A3730" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 199 108 L 210 100" stroke="#4A3730" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        <g id="accessoryHat" class="accessory hidden-acc">
+          <ellipse cx="150" cy="62" rx="52" ry="12" fill="#5C4A42"/>
+          <path d="M 112 64 Q 112 18 150 18 Q 188 18 188 64 Z" fill="#6B5850"/>
+          <ellipse cx="150" cy="64" rx="38" ry="9" fill="#7A6660"/>
+        </g>
+        <g id="accessoryCap" class="accessory hidden-acc">
+          <path d="M 100 78 Q 108 32 150 32 Q 192 32 200 78 Q 150 68 100 78 Z" fill="#7FB3B8"/>
+          <path d="M 186 70 Q 214 70 218 82 Q 196 84 184 78 Z" fill="#5FA3A8"/>
+        </g>
+        <g id="accessoryFlower" class="accessory hidden-acc">
+          <circle cx="112" cy="86" r="5" fill="#F26D9B"/>
+          <circle cx="120" cy="80" r="5" fill="#FFA6C1"/>
+          <circle cx="122" cy="90" r="5" fill="#FFA6C1"/>
+          <circle cx="116" cy="86" r="4" fill="#FFD97D"/>
+        </g>
       </svg>
 
       <!-- Seifenblasen-Animation beim Waschen -->
@@ -270,6 +310,16 @@
           <div class="game-card-title">Figuren-Memory</div>
           <div class="game-card-desc">Finde die passenden Spielzeug-Paare!</div>
         </button>
+        <button class="game-card" data-game="balloon">
+          <div class="game-card-emoji">🎈</div>
+          <div class="game-card-title">Ballon-Fang</div>
+          <div class="game-card-desc">Zerplatze bunte Ballons, meide die Bienen!</div>
+        </button>
+        <button class="game-card" data-game="simon">
+          <div class="game-card-emoji">🎵</div>
+          <div class="game-card-title">Melodie-Merker</div>
+          <div class="game-card-desc">Merk dir die Reihenfolge und tippe sie nach!</div>
+        </button>
       </div>
     </div>
 
@@ -285,6 +335,12 @@
       <div class="harvest-grid hidden" id="harvestGrid"></div>
       <div class="chase-area hidden" id="chaseArea">
         <button class="chase-target" id="chaseTarget">🍓</button>
+      </div>
+      <div class="simon-grid hidden" id="simonGrid">
+        <button class="simon-pad" data-pad="0" style="--pad-color:#FFB3A7">🍓</button>
+        <button class="simon-pad" data-pad="1" style="--pad-color:#FFE08A">🎈</button>
+        <button class="simon-pad" data-pad="2" style="--pad-color:#9AD6DA">🧸</button>
+        <button class="simon-pad" data-pad="3" style="--pad-color:#D6C9EE">⭐</button>
       </div>
       <button class="jump-btn hidden" id="jumpBtn">⬆️ Springen</button>
       <button class="jump-btn hidden" id="gasBtn">🚗 Gas!</button>
@@ -339,10 +395,14 @@
 <div class="overlay hidden" id="shopOverlay">
   <div class="overlay-panel">
     <button class="overlay-close" id="shopClose" aria-label="Schließen">✕</button>
-    <h2 class="album-title">🛍️ Spielzeug-Shop</h2>
-    <p class="game-hint">Kaufe Spielzeug für mehr Spaß! Coins bekommst du fürs Arbeiten.</p>
+    <h2 class="album-title">🛍️ Summis Shop</h2>
+    <div class="shop-tabs">
+      <button class="shop-tab active" id="shopTabToys" data-tab="toys">🧸 Spielzeug</button>
+      <button class="shop-tab" id="shopTabClothes" data-tab="clothes">👒 Kleidung</button>
+    </div>
+    <p class="game-hint" id="shopTabHint">Kaufe Spielzeug für mehr Spaß! Coins bekommst du fürs Arbeiten und in Minispielen.</p>
     <div class="shop-list" id="shopList"></div>
-    <h3 class="inventory-title">🎒 Inventar</h3>
+    <h3 class="inventory-title" id="inventoryTitle">🎒 Inventar</h3>
     <div class="inventory-list" id="inventoryList"></div>
   </div>
 </div>
@@ -373,6 +433,59 @@
     </div>
     <button class="primary-btn" id="reviveBtn" disabled>Wiederbeleben</button>
     <p class="game-hint">Erdbeeren bekommst du im Erdbeer-Minispiel!</p>
+  </div>
+</div>
+
+<!-- ===== "App installieren"-Overlay ===== -->
+<div class="overlay hidden" id="installOverlay">
+  <div class="overlay-panel">
+    <button class="overlay-close" id="installClose" aria-label="Schließen">✕</button>
+    <h2 class="album-title">📲 Als App installieren</h2>
+    <p class="game-hint" id="installGenericHint">Installiere SummiCare auf deinem Homescreen – dann startet sie wie eine normale Handy-App, auch ohne Browser-Adressleiste!</p>
+    <div id="installIosSteps" class="info-list hidden">
+      <div class="info-entry">
+        <div class="info-entry-title">1. Teilen-Symbol antippen</div>
+        <div class="info-entry-text">Tippe unten (Safari) oder oben (Chrome) auf das Teilen-Symbol ⬆️.</div>
+      </div>
+      <div class="info-entry">
+        <div class="info-entry-title">2. "Zum Home-Bildschirm"</div>
+        <div class="info-entry-text">Wähle im Menü "Zum Home-Bildschirm" aus.</div>
+      </div>
+      <div class="info-entry">
+        <div class="info-entry-title">3. Fertig!</div>
+        <div class="info-entry-text">SummiCare erscheint als App-Icon und lässt sich wie jede andere App öffnen.</div>
+      </div>
+    </div>
+    <button class="primary-btn hidden" id="installNowBtn" style="margin-top:12px;">📲 Jetzt installieren</button>
+  </div>
+</div>
+
+<!-- ===== Erfolge & Tägliche Belohnung ===== -->
+<div class="overlay hidden" id="questOverlay">
+  <div class="overlay-panel">
+    <button class="overlay-close" id="questClose" aria-label="Schließen">✕</button>
+    <h2 class="album-title">🏆 Tägliche Belohnung &amp; Erfolge</h2>
+    <div class="daily-reward-box" id="dailyRewardBox">
+      <div class="daily-streak-text" id="dailyStreakText">Serie: Tag 1</div>
+      <div class="daily-streak-row" id="dailyStreakRow"></div>
+      <button class="primary-btn" id="dailyClaimBtn">Belohnung abholen</button>
+    </div>
+    <h3 class="inventory-title">🏅 Erfolge</h3>
+    <div class="achievement-list" id="achievementList"></div>
+  </div>
+</div>
+
+<!-- ===== Spielzeug spielen (Interaktions-Overlay) ===== -->
+<div class="overlay hidden" id="toyPlayOverlay">
+  <div class="overlay-panel toyplay-panel">
+    <button class="overlay-close" id="toyPlayClose" aria-label="Schließen">✕</button>
+    <h2 class="album-title" id="toyPlayTitle">Spielen</h2>
+    <div class="toyplay-stage" id="toyPlayStage">
+      <div class="toyplay-bear">🧸</div>
+      <div class="toyplay-toy" id="toyPlayToyIcon">🐷</div>
+    </div>
+    <p class="game-hint" id="toyPlayHint">Tippe schnell, damit Summi Spaß hat!</p>
+    <div class="toyplay-bar"><div class="toyplay-fill" id="toyPlayFill"></div></div>
   </div>
 </div>
 
