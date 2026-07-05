@@ -1666,6 +1666,11 @@ function closeBoosterReveal() {
   document.getElementById("boosterOpenOverlay").classList.add("hidden");
 }
 
+// Einheitliches Marken-Logo auf jedem Pack (wie eine "Spielserie"), damit die
+// Packs wie echte, verschlossene Sammelkarten-Packs aussehen und nicht wie
+// eine einfache Vorschau des Inhalts.
+const BOOSTER_BRAND_TITLE = "Summis Sammelwelt";
+
 function renderCardsShop() {
   shopList.className = "shop-boosters";
   shopList.innerHTML = BOOSTER_PACKS.map((pack) => {
@@ -1675,10 +1680,18 @@ function renderCardsShop() {
       : `${pack.cost} 🍓`;
     return `
     <div class="booster-pack-card" style="background:${pack.gradient}">
+      <div class="pack-top-trim"></div>
+      <div class="pack-brand">${BOOSTER_BRAND_TITLE}</div>
       <div class="booster-pack-subtitle">${pack.subtitle}</div>
+      <div class="pack-art">
+        <img src="${pack.coverImg}" alt="">
+        <span class="pack-deco pack-deco-1">✨</span>
+        <span class="pack-deco pack-deco-2">⭐</span>
+        <span class="pack-deco pack-deco-3">💫</span>
+      </div>
       <div class="booster-pack-name">${pack.name}</div>
-      <div class="booster-pack-photo"><img src="${pack.coverImg}" alt="${pack.name}"></div>
-      <div class="booster-pack-desc">${pack.desc}</div>
+      <div class="pack-bottom-bar"><span>${pack.cardCount} Karten</span></div>
+      <div class="pack-bottom-trim"></div>
       <button class="booster-buy-btn" data-pack="${pack.id}" ${balance < pack.cost ? "disabled" : ""}>
         ${costLabel}
       </button>

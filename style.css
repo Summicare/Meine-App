@@ -1474,21 +1474,24 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   gap: 12px;
   margin-top: 10px;
 }
+/* Wie ein echtes, verschlossenes Sammelkarten-Pack: hohes Foliopack-Format,
+   holografischer Glanz, Zierrand oben/unten, Logo + Set-Name — man sieht nur
+   Verpackungs-Artwork, keine Vorschau der tatsächlichen Karten darin. */
 .booster-pack-card{
   position: relative;
-  aspect-ratio: 2 / 3;
-  border-radius: 16px;
-  padding: 10px 8px 12px;
+  aspect-ratio: 5 / 8;
+  border-radius: 14px;
+  padding: 8px 7px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: 0 10px 22px rgba(80,50,40,0.28);
+  box-shadow: 0 10px 22px rgba(80,50,40,0.32);
   border: 3px solid rgba(255,255,255,0.55);
   overflow: hidden;
 }
 .booster-pack-card::before{
-  /* wandernder Folien-Glanzstreifen quer über das Pack, wie bei echten Booster-Packs */
+  /* wandernder Folien-Glanzstreifen quer über das ganze Pack, wie bei echten Booster-Packs */
   content: "";
   position: absolute;
   inset: 0;
@@ -1496,38 +1499,93 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   background-size: 250% 250%;
   animation: shineSweep 3.2s linear infinite;
   pointer-events: none;
+  z-index: 2;
+}
+.pack-top-trim, .pack-bottom-trim{
+  width: 100%;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.85) 0 4px, rgba(255,255,255,0.15) 4px 8px);
+  opacity: 0.8;
+}
+.pack-top-trim{ margin-bottom: 4px; }
+.pack-bottom-trim{ margin-top: 4px; }
+.pack-brand{
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 0.72rem;
+  color: #FFE9A8;
+  -webkit-text-stroke: 0.6px rgba(92,74,66,0.6);
+  text-shadow: 0 1px 0 rgba(92,74,66,0.6), 0 2px 3px rgba(0,0,0,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.05;
 }
 .booster-pack-name{
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   color: #fff;
   text-shadow: 0 2px 4px rgba(0,0,0,0.35);
   line-height: 1.1;
 }
 .booster-pack-subtitle{
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   font-weight: 700;
   color: rgba(255,255,255,0.85);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-bottom: 4px;
+  margin: 1px 0 5px;
 }
-.booster-pack-photo{
-  width: 78%;
+.pack-art{
+  position: relative;
+  width: 84%;
   aspect-ratio: 1 / 1;
   border-radius: 10px;
   overflow: hidden;
   border: 2px solid rgba(255,255,255,0.7);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-  margin: 4px 0 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 0 0 100px rgba(0,0,0,0.05);
+  margin: 2px 0 6px;
 }
-.booster-pack-photo img{ width: 100%; height: 100%; object-fit: cover; display: block; }
-.booster-pack-desc{
-  font-size: 0.62rem;
-  color: rgba(255,255,255,0.9);
-  line-height: 1.25;
-  flex: 1;
+.pack-art img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(1.15) contrast(1.05);
+}
+.pack-art::after{
+  /* holografischer Schimmer direkt über dem Artwork, wie Foliendruck */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%);
+  background-size: 250% 250%;
+  animation: shineSweep 2.6s linear infinite;
+  mix-blend-mode: overlay;
+}
+.pack-deco{
+  position: absolute;
+  font-size: 0.85rem;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
+  pointer-events: none;
+  animation: sparkleTwinkle 1.8s ease-in-out infinite;
+}
+.pack-deco-1{ top: 5%; left: 6%; }
+.pack-deco-2{ bottom: 8%; right: 7%; animation-delay: 0.4s; }
+.pack-deco-3{ top: 10%; right: 10%; animation-delay: 0.9s; font-size: 0.7rem; }
+.pack-bottom-bar{
+  width: 100%;
+  background: rgba(0,0,0,0.32);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  border-radius: 8px;
+  margin-top: auto;
 }
 .booster-buy-btn{
   margin-top: 8px;
