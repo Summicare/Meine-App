@@ -256,8 +256,11 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   100%{ transform: rotate(0); }
 }
 
-/* Ruhigere, langsamere Bewegung im Schlaf */
-.bear-wrap.sleeping{ animation-duration: 5s; cursor: pointer; }
+/* Er legt sich zum Schlafen sichtbar hin: nur der Bär selbst dreht sich
+   (nicht der ganze Wrap), damit die "Zzz"-Blase & Co. weiterhin normal
+   aufrecht an ihrer Position bleiben. Das Auf-und-Ab-Wippen wird dafür
+   gestoppt - liegend "bobbt" er nicht mehr. */
+.bear-wrap.sleeping{ animation: none; cursor: pointer; }
 
 /* Schlafmund + Sabbertropfen einblenden, normalen Mund ausblenden */
 .bear-wrap.sleeping #mouth{ opacity: 0; }
@@ -540,6 +543,15 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
 
 .bear-wrap.washing .bear-svg{ filter: saturate(1.15) brightness(1.05); }
 .bear-wrap.dirty .bear-svg{ filter: saturate(0.85) brightness(0.97); }
+
+/* Länger anhaltender "frisch geduscht"-Glanz nach dem Waschen */
+.bear-wrap.freshly-washed .bear-svg{
+  animation: freshShine 2.2s ease-in-out infinite;
+}
+@keyframes freshShine{
+  0%, 100%{ filter: saturate(1.1) brightness(1.03) drop-shadow(0 0 7px rgba(143,198,201,0.5)); }
+  50%{ filter: saturate(1.2) brightness(1.07) drop-shadow(0 0 13px rgba(143,198,201,0.75)); }
+}
 .bear-wrap.fainted{ animation: none !important; }
 .bear-wrap.fainted .bear-svg{ filter: grayscale(0.7) brightness(0.9); transform: rotate(-4deg); }
 .bear-wrap.fainted .zzz, .bear-wrap.fainted #mouthOpen, .bear-wrap.fainted #droolDrop{ opacity: 0 !important; }
@@ -562,11 +574,15 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   100%{ transform: translateY(14px); opacity: 0; }
 }
 
-/* Ruhiges "Atmen" im Schlaf */
-.bear-wrap.sleeping .bear-svg{ animation: sleepBreathe 3.2s ease-in-out infinite; }
+/* Liegende Pose + ruhiges "Atmen" im Schlaf (Drehung sitzt auf dem
+   Bären selbst, nicht auf dem Wrap, damit Zzz-Blase etc. aufrecht bleiben) */
+.bear-wrap.sleeping .bear-svg{
+  animation: sleepBreathe 3.2s ease-in-out infinite;
+  transform-origin: 50% 65%;
+}
 @keyframes sleepBreathe{
-  0%, 100%{ transform: scale(1); }
-  50%{ transform: scale(1.025); }
+  0%, 100%{ transform: rotate(88deg) scale(1); }
+  50%{ transform: rotate(88deg) scale(1.025); }
 }
 
 /* Trost-Buttons: nur beim Weinen sichtbar */
@@ -932,72 +948,6 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   text-align: center;
   font-size: 1.1rem;
   margin: 4px 0 6px;
-}
-
-/* ===== Foto-Diashow ===== */
-.slideshow{
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.slide-arrow{
-  flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background: var(--cream);
-  box-shadow: var(--shadow);
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--brown);
-  cursor: pointer;
-}
-.slide-arrow:active{ transform: scale(0.92); }
-.slide-arrow:disabled{ opacity: 0.35; cursor: default; }
-
-.slide-frame{
-  flex: 1;
-  aspect-ratio: 1 / 1;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: #EFE1D6;
-  box-shadow: var(--shadow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.slide-frame img{ width: 100%; height: 100%; object-fit: cover; display: block; }
-
-.slide-locked{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px;
-  text-align: center;
-}
-.slide-locked .lock-emoji{ font-size: 2.2rem; }
-.slide-locked .slide-cost{ font-weight: 700; color: var(--brown); }
-.slide-locked.special .slide-cost{ color: var(--pink-dark); }
-.slide-special-badge{
-  background: linear-gradient(160deg,#FFD97D,#F2B84B);
-  color: #5C4A42;
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 999px;
-}
-
-.slide-counter{
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--brown-light);
-  margin-top: 8px;
-  font-weight: 700;
 }
 
 /* ===== Spielzeug-Shop ===== */

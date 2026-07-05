@@ -44,14 +44,13 @@ const STORAGE_KEY = "baerchenState_v1";
 // Wie schnell die Werte pro Sekunde sinken (Vollausschlag -> 0 in X Minuten)
 // Deutlich beschleunigt gegenüber vorher, damit sich Pflege spürbar lohnt.
 const DECAY = {
-  hunger: 100 / (8 * 60),  // 8 Minuten
+  hunger: 100 / (20 * 60), // 20 Minuten - langsamer, damit er nicht mehr so schnell ohnmächtig wird
   clean:  100 / (20 * 60), // 20 Minuten - langsamer, damit er nach dem Waschen nicht gefühlt sofort wieder dreckig wird
-  fun:    100 / (8 * 60),  // 8 Minuten – jetzt ungefähr im gleichen Tempo wie Hunger
+  fun:    100 / (20 * 60), // 20 Minuten - gleiches Tempo wie Hunger/Sauberkeit
 };
 
 const MAX_CATCHUP_SECONDS = 3 * 60 * 60; // max. 3h "Abwesenheits-Verfall" nachholen
 const REVIVE_COST = 10; // so viele 🍓 werden zum Wiederbeleben gebraucht
-const PHOTO_COUNT = 18; // Anzahl der Fotos im Album (photo13.jpg entfernt)
 
 // ===== LEVEL- & ALTERSSYSTEM (konfigurierbar) =====
 // Pflege-Punkte pro Aktion (frei anpassbar):
@@ -82,7 +81,6 @@ let state = {
   isDead: false,
   isTorn: false, // Naht aufgerissen -> muss genäht werden
   isSick: false, // krank -> braucht Medizin
-  unlockedPhotos: new Array(PHOTO_COUNT).fill(false),
   stats: {
     feeds: 0,
     washes: 0,
@@ -105,10 +103,6 @@ function loadState() {
     if (raw) {
       const saved = JSON.parse(raw);
       state = { ...state, ...saved };
-      // Absicherung: falls das Array aus einem älteren Speicherstand kürzer
-      // ist (z. B. wurden später neue Fotos hinzugefügt), auffüllen.
-      if (!Array.isArray(state.unlockedPhotos)) state.unlockedPhotos = [];
-      while (state.unlockedPhotos.length < PHOTO_COUNT) state.unlockedPhotos.push(false);
       if (!state.toys) state.toys = { piglet: 0, cowboy: 0, plush: 0 };
       for (const key of ["piglet", "cowboy", "plush", "ball", "kite", "yoyo", "blocks"]) {
         if (typeof state.toys[key] !== "number") state.toys[key] = 0;
@@ -586,6 +580,9 @@ function drink() {
   saveState();
 }
 
+const FRESH_SHINE_MS = 15000; // wie lange der "frisch geduscht"-Glanz sichtbar bleibt
+let freshShineTimeout = null;
+
 function wash() {
   if (actionsBlocked()) return;
   el.bearWrap.classList.add("washing");
@@ -606,6 +603,14 @@ function wash() {
   renderAll();
   saveState();
   checkAchievements();
+
+  // Länger anhaltender Glanz-Effekt, nicht nur die kurze Seifenblasen-Animation.
+  clearTimeout(freshShineTimeout);
+  el.bearWrap.classList.add("freshly-washed");
+  freshShineTimeout = setTimeout(() => {
+    el.bearWrap.classList.remove("freshly-washed");
+  }, FRESH_SHINE_MS);
+
   setTimeout(() => {
     el.bearWrap.classList.remove("washing");
     el.washFx.innerHTML = "";
@@ -1003,104 +1008,6 @@ function reviveSummi() {
   renderAll();
   saveState();
 }
-
-/* ---------------------------------------------------------------------
-   7c) FOTO-ALBUM: Diashow mit gestaffelten Preisen & seltenen Spezial-Fotos
---------------------------------------------------------------------- */
-// Jedes Foto hat einen eigenen Preis (steigt an) und kann optional als
-// "special: true" markiert werden (seltenes, teures Bonusbild).
-//
-// EIGENE BILDER ERGÄNZEN: einfach weitere Einträge unten anhängen, z. B.:
-//   { src: "photos/photo20.jpg", cost: 45 },
-// oder als seltenes Spezial-Bild:
-//   { src: "photos/special-urlaub.jpg", cost: 80, special: true },
-// photo13.jpg wurde entfernt (zeigte ein Gesicht) - daher hier bewusst
-// keine einfache 1..PHOTO_COUNT-Zählung, sondern eine explizite Liste
-// der tatsächlich vorhandenen Dateinummern.
-const PHOTO_FILE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19];
-const PHOTOS = PHOTO_FILE_NUMBERS.map((n, i) => ({
-  src: `photos/photo${n}.jpg`,
-  cost: 4 + i * 3, // steigender Preis
-  special: false,
-}));
-// Die letzten beiden Fotos als seltene, besonders teure "Spezial-Bilder" markieren:
-PHOTOS[PHOTOS.length - 2].cost = 55;
-PHOTOS[PHOTOS.length - 2].special = true;
-PHOTOS[PHOTOS.length - 1].cost = 70;
-PHOTOS[PHOTOS.length - 1].special = true;
-
-// // Beispiel, wie man eigene weitere Spezial-Bilder ergänzen kann:
-// PHOTOS.push({ src: "photos/special-geburtstag.jpg", cost: 90, special: true });
-
-const albumOverlay = document.getElementById("albumOverlay");
-const slideFrame = document.getElementById("slideFrame");
-const slidePrev = document.getElementById("slidePrev");
-const slideNext = document.getElementById("slideNext");
-const slideCounter = document.getElementById("slideCounter");
-let albumIndex = 0;
-
-function openAlbum() {
-  albumOverlay.classList.remove("hidden");
-  albumIndex = 0;
-  renderSlide();
-}
-
-function closeAlbum() {
-  albumOverlay.classList.add("hidden");
-}
-
-function renderSlide() {
-  const photo = PHOTOS[albumIndex];
-  slideCounter.textContent = albumIndex + 1 + " / " + PHOTOS.length;
-  slidePrev.disabled = albumIndex === 0;
-  slideNext.disabled = albumIndex === PHOTOS.length - 1;
-
-  if (state.unlockedPhotos[albumIndex]) {
-    slideFrame.innerHTML = `<img src="${photo.src}" alt="Summi Erinnerungsfoto ${albumIndex + 1}">`;
-    return;
-  }
-
-  const badge = photo.special ? '<span class="slide-special-badge">✨ Seltenes Bild</span>' : "";
-  slideFrame.innerHTML = `
-    <div class="slide-locked ${photo.special ? "special" : ""}">
-      <span class="lock-emoji">🔒</span>
-      ${badge}
-      <span class="slide-cost">${photo.cost} 🍓 zum Freischalten</span>
-      <button class="primary-btn" id="unlockCurrentPhoto">Freischalten</button>
-    </div>`;
-  document.getElementById("unlockCurrentPhoto").addEventListener("click", () => unlockPhoto(albumIndex));
-}
-
-function unlockPhoto(idx) {
-  if (state.unlockedPhotos[idx]) return;
-  const cost = PHOTOS[idx].cost;
-  if (state.strawberries < cost) {
-    showToast("Noch nicht genug 🍓 gesammelt! Brauchst " + cost + ".");
-    return;
-  }
-  state.strawberries -= cost;
-  state.unlockedPhotos[idx] = true;
-  renderAll();
-  saveState();
-  renderSlide();
-  showToast("📸 Neues Erinnerungsfoto freigeschaltet!");
-}
-
-slidePrev.addEventListener("click", () => {
-  if (albumIndex > 0) {
-    albumIndex--;
-    renderSlide();
-  }
-});
-slideNext.addEventListener("click", () => {
-  if (albumIndex < PHOTOS.length - 1) {
-    albumIndex++;
-    renderSlide();
-  }
-});
-
-document.getElementById("albumBtn").addEventListener("click", openAlbum);
-document.getElementById("albumClose").addEventListener("click", closeAlbum);
 
 /* ---------------------------------------------------------------------
    7e) SPIELZEUG- & KLEIDUNG-SHOP (mit Coins) & INVENTAR
@@ -1964,7 +1871,6 @@ const ACHIEVEMENTS = [
   { id: "berries50", icon: "🍓", title: "Erdbeer-Sammler", desc: "Sammle insgesamt 50 Erdbeeren.", target: 50, get: (s) => s.strawberriesLifetime, reward: { coins: 30, strawberries: 5 } },
   { id: "toys3", icon: "🧸", title: "Spielzeug-Sammler", desc: "Besitze 3 verschiedene Spielzeuge.", target: 3, get: (s) => s.toyVariety, reward: { coins: 45, strawberries: 0 } },
   { id: "clothes3", icon: "👒", title: "Modebewusst", desc: "Besitze 3 Kleidungsstücke.", target: 3, get: (s) => s.clothesVariety, reward: { coins: 45, strawberries: 0 } },
-  { id: "photos5", icon: "📸", title: "Fototalent", desc: "Schalte 5 Erinnerungsfotos frei.", target: 5, get: (s) => s.photosUnlocked, reward: { coins: 35, strawberries: 0 } },
   { id: "streak7", icon: "📅", title: "Wochentreue", desc: "Hol 7 Tage in Folge die tägliche Belohnung ab.", target: 7, get: (s) => s.streakBest, reward: { coins: 100, strawberries: 10 } },
   { id: "cards8", icon: "🎴", title: "Kartensammler", desc: "Sammle 8 verschiedene Karten.", target: 8, get: (s) => s.cardVariety, reward: { coins: 60, strawberries: 0 } },
   { id: "cardsAll", icon: "🌈", title: "Vollständiges Album", desc: "Sammle alle " + CARD_POOL.length + " Karten.", target: CARD_POOL.length, get: (s) => s.cardVariety, reward: { coins: 150, strawberries: 10 } },
@@ -1979,7 +1885,6 @@ function statsSnapshot() {
     strawberriesLifetime: state.stats.strawberriesLifetime,
     toyVariety: TOYS.filter((t) => state.toys[t.id] > 0).length,
     clothesVariety: CLOTHES.filter((c) => state.clothes[c.id] > 0).length,
-    photosUnlocked: state.unlockedPhotos.filter(Boolean).length,
     streakBest: state.dailyStreak.best,
     cardVariety: CARD_POOL.filter((c) => state.cards[c.id] > 0).length,
   };
