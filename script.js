@@ -197,6 +197,10 @@ const el = {
   comfortButtons: document.getElementById("comfortButtons"),
   workBanner: document.getElementById("workBanner"),
   workFill: document.getElementById("workFill"),
+  heldToy: document.getElementById("heldToy"),
+  toyPlayBanner: document.getElementById("toyPlayBanner"),
+  toyPlayLabel: document.getElementById("toyPlayLabel"),
+  toyPlayFill: document.getElementById("toyPlayFill"),
   fills: {
     hunger: document.getElementById("fill-hunger"),
     clean: document.getElementById("fill-clean"),
@@ -360,7 +364,7 @@ function renderActionLock() {
   // Während Summi schläft oder arbeitet, sind die meisten Aktionen gesperrt.
   // Der Schlaf-Knopf selbst bleibt aktiv (außer bei Ohnmacht/Arbeit), damit
   // man ihn jederzeit aufwecken kann.
-  const lockMost = state.isDead || isSleeping || isWorking;
+  const lockMost = state.isDead || isSleeping || isWorking || !!toyPlayState;
   el.actionButtons.forEach((btn) => {
     if (btn.id === "btnSleep") {
       btn.classList.toggle("disabled", state.isDead || isWorking);
@@ -423,6 +427,7 @@ function renderAll() {
   renderStrawberries();
   renderActionLock();
   renderLevelAge();
+  renderToyTray();
 }
 
 /* ---------------------------------------------------------------------
@@ -543,6 +548,10 @@ function actionsBlocked() {
     showToast("💼 Summi arbeitet gerade und darf nicht gestört werden!");
     return true;
   }
+  if (toyPlayState) {
+    showToast("🧸 Summi spielt gerade – lass ihn kurz fertig spielen!");
+    return true;
+  }
   return false;
 }
 
@@ -618,6 +627,7 @@ function wash() {
 }
 
 function petBear() {
+  if (toyPlayState) return tapToyPlay();
   if (state.isDead) return showToast("😵 Summi ist ohnmächtig – sammle 🍓 zum Wiederbeleben!");
   if (isWorking) return showToast("💼 Summi arbeitet gerade und darf nicht gestört werden!");
   if (isSleeping) {
@@ -660,9 +670,10 @@ function scheduleSleep(delay) {
 
 function fallAsleep() {
   if (isSleeping) return;
-  if (!overlay.classList.contains("hidden") || isWorking || isWatchingTV) {
-    // Während eines Minispiels, der Arbeit oder einer laufenden Sendung
-    // nicht einschlafen, aber später erneut prüfen.
+  if (!overlay.classList.contains("hidden") || isWorking || isWatchingTV || toyPlayState) {
+    // Während eines Minispiels, der Arbeit, einer laufenden Sendung oder
+    // während Summi gerade mit einem Spielzeug spielt, nicht einschlafen,
+    // aber später erneut prüfen.
     scheduleSleep(5000);
     return;
   }
@@ -1165,7 +1176,10 @@ function renderToyInventory() {
     )
     .join("");
   inventoryList.querySelectorAll(".inventory-play-btn").forEach((btn) => {
-    btn.addEventListener("click", () => openToyPlay(btn.dataset.toy));
+    btn.addEventListener("click", () => {
+      closeShop();
+      startToyPlay(btn.dataset.toy);
+    });
   });
 }
 
@@ -1285,29 +1299,60 @@ document.getElementById("shopTabToys").addEventListener("click", () => setShopTa
 document.getElementById("shopTabClothes").addEventListener("click", () => setShopTab("clothes"));
 
 /* ---------------------------------------------------------------------
-   7f) MIT SPIELZEUG SPIELEN (interaktive Tipp-Session statt Kurz-Animation)
+   7f) MIT SPIELZEUG SPIELEN (direkt am Bären auf der Startseite, statt in
+   einem separaten Popup — Summi nimmt das Spielzeug sichtbar in die Hand
+   und jedes Spielzeug hat seine eigene Animation)
 --------------------------------------------------------------------- */
-const toyPlayOverlay = document.getElementById("toyPlayOverlay");
-const toyPlayStage = document.getElementById("toyPlayStage");
-const toyPlayFill = document.getElementById("toyPlayFill");
+const toyTrayEl = document.getElementById("toyTray");
 const TOY_PLAY_DURATION = 6; // Sekunden
-let toyPlayState = null;
+let toyPlayState = null; // { id, taps, timeLeft }
 let toyPlayTimerInterval = null;
-let toyPlayCurrentId = null;
 
-function openToyPlay(id) {
+// Jedes Spielzeug bekommt seine eigene CSS-Animationsklasse fürs Halten.
+const TOY_ANIM_CLASS = {
+  piglet: "toy-anim-cuddle",
+  cowboy: "toy-anim-gallop",
+  plush: "toy-anim-hug",
+  ball: "toy-anim-ball",
+  yoyo: "toy-anim-yoyo",
+  kite: "toy-anim-kite",
+  blocks: "toy-anim-blocks",
+};
+
+function renderToyTray() {
+  if (!toyTrayEl) return;
+  const owned = TOYS.filter((t) => state.toys[t.id] > 0);
+  if (owned.length === 0 || toyPlayState) {
+    toyTrayEl.classList.add("hidden");
+    toyTrayEl.innerHTML = "";
+    return;
+  }
+  toyTrayEl.classList.remove("hidden");
+  toyTrayEl.innerHTML = owned
+    .map((t) => `<button class="toy-tray-btn" data-toy="${t.id}" title="Mit ${t.name} spielen">${t.emoji}</button>`)
+    .join("");
+  toyTrayEl.querySelectorAll(".toy-tray-btn").forEach((btn) => {
+    btn.addEventListener("click", () => startToyPlay(btn.dataset.toy));
+  });
+}
+
+function startToyPlay(id) {
   const toy = TOYS.find((t) => t.id === id);
   if (!toy || !state.toys[id]) return;
   if (actionsBlocked()) return;
+
   registerInteraction();
-  toyPlayCurrentId = id;
-  document.getElementById("toyPlayTitle").textContent = toy.emoji + " Spielen mit " + toy.name;
-  document.getElementById("toyPlayToyIcon").textContent = toy.emoji;
-  document.getElementById("toyPlayHint").textContent =
-    "Tippe schnell auf Summi, damit er richtig Spaß mit " + toy.name + " hat!";
-  toyPlayState = { taps: 0, timeLeft: TOY_PLAY_DURATION };
-  toyPlayFill.style.width = "0%";
-  toyPlayOverlay.classList.remove("hidden");
+  toyPlayState = { id, taps: 0, timeLeft: TOY_PLAY_DURATION };
+
+  const animClass = TOY_ANIM_CLASS[id] || "toy-anim-ball";
+  el.heldToy.textContent = toy.emoji;
+  el.heldToy.className = "held-toy " + animClass;
+  el.bearWrap.classList.add("playing-toy");
+
+  el.toyPlayLabel.textContent = toy.emoji + " Spielt mit " + toy.name;
+  el.toyPlayFill.style.width = "0%";
+  el.toyPlayBanner.classList.remove("hidden");
+  renderToyTray(); // Tray während des Spielens ausblenden
 
   clearInterval(toyPlayTimerInterval);
   toyPlayTimerInterval = setInterval(() => {
@@ -1317,26 +1362,30 @@ function openToyPlay(id) {
   }, 1000);
 }
 
+// Wird beim Antippen des Bären aufgerufen, solange ein Spielzeug aktiv ist
+// (petBear() leitet währenddessen hierher um, statt normal zu streicheln).
 function tapToyPlay() {
   if (!toyPlayState) return;
   toyPlayState.taps++;
   const pct = Math.min(100, (toyPlayState.taps / 18) * 100);
-  toyPlayFill.style.width = pct + "%";
-  toyPlayStage.classList.remove("bounce");
-  void toyPlayStage.offsetWidth;
-  toyPlayStage.classList.add("bounce");
-  const toy = TOYS.find((t) => t.id === toyPlayCurrentId);
+  el.toyPlayFill.style.width = pct + "%";
+  wiggleBear();
+  const toy = TOYS.find((t) => t.id === toyPlayState.id);
   if (toy && toyPlayState.taps % 3 === 0) spawnParticles(toy.emoji, 2);
   vibrate(8);
 }
 
 function finishToyPlay() {
   clearInterval(toyPlayTimerInterval);
-  toyPlayOverlay.classList.add("hidden");
   if (!toyPlayState) return;
-  const toy = TOYS.find((t) => t.id === toyPlayCurrentId);
+  const toy = TOYS.find((t) => t.id === toyPlayState.id);
   const taps = toyPlayState.taps;
   toyPlayState = null;
+
+  el.bearWrap.classList.remove("playing-toy");
+  el.heldToy.classList.add("hidden");
+  el.toyPlayBanner.classList.add("hidden");
+  renderToyTray();
   if (!toy) return;
 
   const funGain = clamp(Math.min(30, 8 + taps * 1.3));
@@ -1355,12 +1404,6 @@ function finishToyPlay() {
   renderAll();
   saveState();
 }
-
-document.getElementById("toyPlayClose").addEventListener("click", finishToyPlay);
-toyPlayStage.addEventListener("pointerdown", (e) => {
-  e.preventDefault();
-  tapToyPlay();
-});
 
 function startTickLoop() {
   setInterval(() => {
