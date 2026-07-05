@@ -110,6 +110,9 @@
       <!-- Kleine Spiel-Animation während der Arbeit (schaukelt mit Spielzeug) -->
       <div class="work-toy-icon" id="workToyIcon">🧸</div>
 
+      <!-- Spielzeug, das Summi gerade in der Hand hält (direkt am Bären, je Spielzeug eigene Animation) -->
+      <div class="held-toy hidden" id="heldToy"></div>
+
       <!-- Fernseh-Dialog: "Darf ich fernsehen?" -->
       <div class="tv-prompt hidden" id="tvPrompt">
         <p>📺 Darf ich fernsehen?</p>
@@ -279,6 +282,16 @@
     <div class="work-banner hidden" id="workBanner">
       <div class="work-label">💼 Summi arbeitet...</div>
       <div class="work-bar"><div class="work-fill" id="workFill"></div></div>
+    </div>
+
+    <!-- Spielzeug-Auswahl: gekaufte Spielzeuge direkt mit Summi auf der Startseite benutzen -->
+    <div class="toy-tray hidden" id="toyTray"></div>
+
+    <!-- Fortschrittsanzeige während des Spielens mit einem Spielzeug -->
+    <div class="toy-play-banner hidden" id="toyPlayBanner">
+      <div class="toy-play-label" id="toyPlayLabel">🧸 Spielt mit ...</div>
+      <div class="toy-play-bar"><div class="toy-play-fill" id="toyPlayFill"></div></div>
+      <p class="toy-play-hint">Tippe schnell auf Summi!</p>
     </div>
   </main>
 
@@ -523,19 +536,6 @@
 </div>
 
 <!-- ===== Spielzeug spielen (Interaktions-Overlay) ===== -->
-<div class="overlay hidden" id="toyPlayOverlay">
-  <div class="overlay-panel toyplay-panel">
-    <button class="overlay-close" id="toyPlayClose" aria-label="Schließen">✕</button>
-    <h2 class="album-title" id="toyPlayTitle">Spielen</h2>
-    <div class="toyplay-stage" id="toyPlayStage">
-      <div class="toyplay-bear">🧸</div>
-      <div class="toyplay-toy" id="toyPlayToyIcon">🐷</div>
-    </div>
-    <p class="game-hint" id="toyPlayHint">Tippe schnell, damit Summi Spaß hat!</p>
-    <div class="toyplay-bar"><div class="toyplay-fill" id="toyPlayFill"></div></div>
-  </div>
-</div>
-
 <!-- ===== Booster-Pack öffnen (Öffnungsanimation + Reveal-Overlay) ===== -->
 <div class="overlay hidden" id="boosterOpenOverlay">
   <div class="overlay-panel">
