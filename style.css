@@ -757,9 +757,13 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
 }
 
 .overlay-close{
-  position: absolute;
-  top: 12px;
-  right: 12px;
+  /* fixed statt absolute: bleibt immer oben rechts am Bildschirm sichtbar
+     und erreichbar, auch wenn der Inhalt des Overlay-Panels lang ist und
+     man nach unten scrollt (sonst würde der Button mit dem Inhalt
+     wegscrollen und wäre nicht mehr klickbar). */
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  right: calc(12px + env(safe-area-inset-right, 0px));
   background: #F1E5DC;
   border: none;
   border-radius: 50%;
@@ -767,6 +771,8 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   height: 34px;
   font-size: 1rem;
   cursor: pointer;
+  z-index: 60;
+  box-shadow: var(--shadow);
 }
 
 .game-menu h2{
