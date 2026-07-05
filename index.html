@@ -83,6 +83,25 @@
   <!-- ===== Bühne: der Bär selbst ===== -->
   <main class="stage" id="stage">
 
+    <!-- Strand-Hintergrund Thailand: nur sichtbar während state.isOnVacation -->
+    <div class="beach-bg hidden" id="beachBg">
+      <div class="beach-sun"></div>
+      <div class="beach-palm beach-palm-left">🌴</div>
+      <div class="beach-palm beach-palm-right">🌴</div>
+      <div class="beach-water"></div>
+      <div class="vacation-badge hidden" id="vacationBadge">🏖️ Urlaub: noch <span id="vacationRemaining">20</span> Min.</div>
+    </div>
+
+    <!-- Flug-Ladebildschirm: Hin- und Rückflug nach Thailand -->
+    <div class="flight-scene hidden" id="flightScene">
+      <div class="flight-clouds">
+        <span>☁️</span><span>☁️</span><span>☁️</span>
+      </div>
+      <div class="plane" id="planeEmoji">✈️</div>
+      <div class="flight-message" id="flightMessage">Summi🥰🥰🧸 fliegt in Urlaub! Bitte warten…</div>
+      <div class="flight-bar"><div class="flight-fill" id="flightFill"></div></div>
+    </div>
+
     <div class="speech-bubble" id="speechBubble"><span id="speechText"></span></div>
 
     <div class="bear-wrap" id="bearWrap">
@@ -252,6 +271,50 @@
           <circle cx="83" cy="44" r="5" fill="#FFA6C1"/>
           <circle cx="85" cy="54" r="5" fill="#FFA6C1"/>
           <circle cx="79" cy="50" r="4" fill="#FFD97D"/>
+        </g>
+
+        <!-- Urlaubs-Outfit Thailand: Blumenkleid + Blumenkranz + Perlenkette
+             (Asset: vacation_thailand_outfit) – nur sichtbar während state.isOnVacation -->
+        <g id="vacationOutfitOverlay">
+          <rect x="88" y="178" width="124" height="100" rx="32" fill="#E8879A"/>
+          <rect x="88" y="178" width="26" height="100" rx="13" fill="#8FC6C9"/>
+          <rect x="186" y="178" width="26" height="100" rx="13" fill="#8FC6C9"/>
+          <path d="M 96 205 Q 150 222 204 205 L 204 218 Q 150 236 96 218 Z" fill="#F4C9D6" opacity="0.85"/>
+          <path d="M 96 245 Q 150 262 204 245 L 204 258 Q 150 276 96 258 Z" fill="#F4C9D6" opacity="0.7"/>
+          <g fill="#FFD97D">
+            <circle cx="118" cy="200" r="4"/>
+            <circle cx="150" cy="232" r="4"/>
+            <circle cx="182" cy="200" r="4"/>
+            <circle cx="134" cy="252" r="3.5"/>
+            <circle cx="166" cy="252" r="3.5"/>
+          </g>
+          <g fill="#F26D9B">
+            <circle cx="118" cy="200" r="2.4"/>
+            <circle cx="150" cy="232" r="2.4"/>
+            <circle cx="182" cy="200" r="2.4"/>
+            <circle cx="134" cy="252" r="2"/>
+            <circle cx="166" cy="252" r="2"/>
+          </g>
+          <path d="M 150 186 L 150 186" stroke="none"/>
+          <g fill="none" stroke="#FFFDF9" stroke-width="3" stroke-linecap="round">
+            <path d="M 128 186 Q 150 198 172 186"/>
+          </g>
+          <g fill="#FFFDF9">
+            <circle cx="128" cy="186" r="3"/>
+            <circle cx="138" cy="193" r="3"/>
+            <circle cx="150" cy="196" r="3"/>
+            <circle cx="162" cy="193" r="3"/>
+            <circle cx="172" cy="186" r="3"/>
+          </g>
+        </g>
+        <g id="vacationHeadband" class="accessory hidden-acc">
+          <path d="M 100 78 Q 108 60 150 60 Q 192 60 200 78" fill="none" stroke="#FFFDF9" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="122" cy="66" r="7" fill="#F26D9B"/>
+          <circle cx="130" cy="59" r="6" fill="#FFA6C1"/>
+          <circle cx="114" cy="61" r="6" fill="#FFA6C1"/>
+          <circle cx="122" cy="66" r="3.5" fill="#FFD97D"/>
+          <circle cx="178" cy="66" r="6" fill="#F26D9B"/>
+          <circle cx="185" cy="61" r="5" fill="#FFA6C1"/>
         </g>
       </svg>
 
@@ -488,6 +551,7 @@
       <button class="shop-tab" id="shopTabClothes" data-tab="clothes">👒 Kleidung</button>
       <button class="shop-tab" id="shopTabCards" data-tab="cards">🎴 Karten</button>
       <button class="shop-tab" id="shopTabSpecial" data-tab="special">✨ Spezial</button>
+      <button class="shop-tab" id="shopTabVacation" data-tab="vacation">🏖️ Urlaub</button>
     </div>
     <p class="game-hint" id="shopTabHint">Kaufe Spielzeug für mehr Spaß! Coins bekommst du fürs Arbeiten und in Minispielen.</p>
     <div class="shop-list" id="shopList"></div>
