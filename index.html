@@ -61,6 +61,144 @@
     </div>
   </div>
 
+  <div class="app-body" id="appBody">
+
+  <!-- Strand-Hintergrund Thailand: nur sichtbar während state.isOnVacation.
+       Liegt als echtes Vollbild HINTER Statusleiste/Bühne/Aktionsleiste,
+       nicht nur als kleiner Block auf der Bühne. -->
+  <div class="beach-bg hidden" id="beachBg">
+    <svg class="beach-svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFE9C7"/>
+          <stop offset="55%" stop-color="#FFD9B0"/>
+          <stop offset="100%" stop-color="#FFC9A0"/>
+        </linearGradient>
+        <linearGradient id="seaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7FDCE0"/>
+          <stop offset="100%" stop-color="#2FA6B0"/>
+        </linearGradient>
+        <linearGradient id="cliffFar" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7FAE6B"/>
+          <stop offset="100%" stop-color="#5C9457"/>
+        </linearGradient>
+        <linearGradient id="cliffNear" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4C8A55"/>
+          <stop offset="100%" stop-color="#356B43"/>
+        </linearGradient>
+      </defs>
+
+      <rect x="0" y="0" width="400" height="800" fill="url(#skyGrad)"/>
+
+      <!-- Wolken -->
+      <g fill="#FFF6E8" opacity="0.85">
+        <ellipse cx="70" cy="70" rx="38" ry="16"/>
+        <ellipse cx="100" cy="62" rx="26" ry="13"/>
+        <ellipse cx="320" cy="46" rx="34" ry="14"/>
+        <ellipse cx="350" cy="54" rx="22" ry="11"/>
+      </g>
+
+      <!-- Ferne Dschungel-Klippen (helleres Grün) -->
+      <path d="M -10 150 Q 40 70 80 120 Q 120 40 170 110 Q 210 50 250 120 Q 300 60 340 130 Q 380 90 410 140 L 410 240 L -10 240 Z" fill="url(#cliffFar)"/>
+
+      <!-- Goldener Tempel in der Ferne -->
+      <g transform="translate(275,75)">
+        <path d="M 0 60 L 0 30 L -14 30 L 0 8 L 14 30 L 0 30" fill="#E8B84B" stroke="#C9932F" stroke-width="1.5"/>
+        <rect x="-16" y="30" width="32" height="30" fill="#F4C96B"/>
+        <rect x="-22" y="58" width="44" height="8" rx="2" fill="#C9932F"/>
+        <circle cx="0" cy="4" r="3" fill="#FFE9A8"/>
+      </g>
+
+      <!-- Nahe Dschungel-Klippen (dunkleres Grün, überlappt) -->
+      <path d="M -10 200 Q 30 120 70 180 Q 100 110 140 175 Q 190 100 230 180 Q 270 120 320 190 Q 360 140 410 200 L 410 290 L -10 290 Z" fill="url(#cliffNear)"/>
+      <!-- Jungle-Textur (kleine Kronen-Kleckse) -->
+      <g fill="#3E7A48" opacity="0.6">
+        <circle cx="40" cy="165" r="10"/>
+        <circle cx="90" cy="155" r="12"/>
+        <circle cx="160" cy="150" r="11"/>
+        <circle cx="250" cy="155" r="13"/>
+        <circle cx="330" cy="165" r="10"/>
+      </g>
+
+      <!-- Meer -->
+      <rect x="0" y="260" width="400" height="180" fill="url(#seaGrad)"/>
+      <path d="M 0 260 Q 100 272 200 260 Q 300 248 400 260 L 400 280 Q 300 268 200 280 Q 100 292 0 280 Z" fill="#BFF2F2" opacity="0.5"/>
+
+      <!-- Boot -->
+      <g transform="translate(300,320)">
+        <path d="M -22 6 Q 0 16 22 6 L 18 14 L -18 14 Z" fill="#4A3730"/>
+        <line x1="0" y1="6" x2="0" y2="-22" stroke="#4A3730" stroke-width="2"/>
+        <path d="M 0 -22 L 16 -4 L 0 -4 Z" fill="#F4A6A6" opacity="0.85"/>
+      </g>
+
+      <!-- Korallen / Wasserpflanzen -->
+      <g fill="#2E8B8F">
+        <path d="M 10 430 Q 4 410 14 398 Q 18 412 22 398 Q 28 414 34 400 Q 36 418 46 430 Z"/>
+      </g>
+      <g fill="#E2564F" opacity="0.85">
+        <circle cx="370" cy="425" r="7"/>
+        <circle cx="382" cy="416" r="6"/>
+        <circle cx="360" cy="416" r="6"/>
+      </g>
+
+      <!-- Sandstrand -->
+      <path d="M 0 425 Q 100 405 200 422 Q 300 440 400 420 L 400 800 L 0 800 Z" fill="#F6DFB4"/>
+      <path d="M 0 440 Q 100 424 200 438 Q 300 452 400 436 L 400 460 Q 300 476 200 462 Q 100 448 0 464 Z" fill="#F0D2A0" opacity="0.7"/>
+    </svg>
+    <div class="beach-palm beach-palm-left">🌴</div>
+    <div class="beach-palm beach-palm-right">🌴</div>
+    <div class="vacation-badge hidden" id="vacationBadge">🏖️ Urlaub: noch <span id="vacationRemaining">20</span> Min.</div>
+  </div>
+
+  <!-- Flug-Ladebildschirm: Hin- und Rückflug nach Thailand.
+       Ebenfalls Vollbild (unter der Kopfleiste), nicht nur ein Kasten. -->
+  <div class="flight-scene hidden" id="flightScene">
+    <div class="flight-clouds">
+      <span>☁️</span><span>☁️</span><span>☁️</span>
+    </div>
+    <div class="beach-palm beach-palm-left flight-palm">🌴</div>
+    <div class="beach-palm beach-palm-right flight-palm">🌴</div>
+
+    <div class="plane" id="planeGraphic">
+      <svg viewBox="0 0 320 170" class="plane-svg" aria-hidden="true">
+        <!-- Kondensstreifen -->
+        <path d="M 0 132 Q 40 128 78 122" stroke="#FFFFFF" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.55"/>
+        <path d="M 0 148 Q 40 143 74 136" stroke="#FFFFFF" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.4"/>
+
+        <!-- Heckflügel (hinten unten) -->
+        <path d="M 108 118 L 60 150 L 100 138 L 132 116 Z" fill="#C9A9C4"/>
+        <!-- Seitenleitwerk (Tail) -->
+        <path d="M 118 108 Q 96 76 82 58 Q 104 70 126 100 Z" fill="#B98FB4"/>
+        <circle cx="103" cy="82" r="10" fill="#FFFDF9"/>
+        <path d="M 98 79 Q 103 74 108 79 Q 103 84 98 79 Z" fill="#F26D9B"/>
+        <path d="M 96 84 Q 103 88 110 84" stroke="#8A7268" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+
+        <!-- Rumpf -->
+        <path d="M 90 112 Q 90 90 130 86 L 260 78 Q 296 76 308 92 Q 296 104 260 104 L 130 110 Q 100 114 90 112 Z" fill="#FFFDF9" stroke="#EADFD2" stroke-width="1.5"/>
+        <!-- Nase -->
+        <path d="M 296 80 Q 312 84 308 92 Q 312 100 296 103 Z" fill="#6B5850"/>
+
+        <!-- Tragfläche (vorne, nach hinten geschwungen) -->
+        <path d="M 190 100 L 130 150 L 178 140 L 222 100 Z" fill="#D9A9C7"/>
+        <path d="M 232 98 L 250 128 L 230 122 L 214 98 Z" fill="#8A6B7E"/>
+
+        <!-- Bullauge mit Bärchen -->
+        <circle cx="250" cy="90" r="13" fill="#BFE9EC"/>
+        <circle cx="250" cy="90" r="13" fill="none" stroke="#EADFD2" stroke-width="2"/>
+        <text x="250" y="95" font-size="15" text-anchor="middle">🧸</text>
+
+        <!-- Deko-Icons am Rumpf -->
+        <text x="150" y="102" font-size="13" text-anchor="middle">🍓</text>
+        <text x="170" y="100" font-size="13" text-anchor="middle">☕</text>
+        <text x="192" y="98" font-size="13" text-anchor="middle">💼</text>
+      </svg>
+      <div class="plane-title">Urlaubsflug…</div>
+    </div>
+
+    <div class="flight-message" id="flightMessage">Summi🥰🥰🧸 fliegt in Urlaub! Bitte warten…</div>
+    <div class="flight-bar"><div class="flight-fill" id="flightFill"></div></div>
+  </div>
+
   <section class="stats" aria-label="Bärchen-Werte">
     <div class="stat" data-stat="hunger">
       <div class="stat-icon">🍓</div>
@@ -82,25 +220,6 @@
 
   <!-- ===== Bühne: der Bär selbst ===== -->
   <main class="stage" id="stage">
-
-    <!-- Strand-Hintergrund Thailand: nur sichtbar während state.isOnVacation -->
-    <div class="beach-bg hidden" id="beachBg">
-      <div class="beach-sun"></div>
-      <div class="beach-palm beach-palm-left">🌴</div>
-      <div class="beach-palm beach-palm-right">🌴</div>
-      <div class="beach-water"></div>
-      <div class="vacation-badge hidden" id="vacationBadge">🏖️ Urlaub: noch <span id="vacationRemaining">20</span> Min.</div>
-    </div>
-
-    <!-- Flug-Ladebildschirm: Hin- und Rückflug nach Thailand -->
-    <div class="flight-scene hidden" id="flightScene">
-      <div class="flight-clouds">
-        <span>☁️</span><span>☁️</span><span>☁️</span>
-      </div>
-      <div class="plane" id="planeEmoji">✈️</div>
-      <div class="flight-message" id="flightMessage">Summi🥰🥰🧸 fliegt in Urlaub! Bitte warten…</div>
-      <div class="flight-bar"><div class="flight-fill" id="flightFill"></div></div>
-    </div>
 
     <div class="speech-bubble" id="speechBubble"><span id="speechText"></span></div>
 
@@ -273,48 +392,77 @@
           <circle cx="79" cy="50" r="4" fill="#FFD97D"/>
         </g>
 
-        <!-- Urlaubs-Outfit Thailand: Blumenkleid + Blumenkranz + Perlenkette
+        <!-- Urlaubs-Outfit Thailand: gemustertes Blumenkleid + Perlenkette
              (Asset: vacation_thailand_outfit) – nur sichtbar während state.isOnVacation -->
         <g id="vacationOutfitOverlay">
-          <rect x="88" y="178" width="124" height="100" rx="32" fill="#E8879A"/>
-          <rect x="88" y="178" width="26" height="100" rx="13" fill="#8FC6C9"/>
-          <rect x="186" y="178" width="26" height="100" rx="13" fill="#8FC6C9"/>
-          <path d="M 96 205 Q 150 222 204 205 L 204 218 Q 150 236 96 218 Z" fill="#F4C9D6" opacity="0.85"/>
-          <path d="M 96 245 Q 150 262 204 245 L 204 258 Q 150 276 96 258 Z" fill="#F4C9D6" opacity="0.7"/>
-          <g fill="#FFD97D">
-            <circle cx="118" cy="200" r="4"/>
-            <circle cx="150" cy="232" r="4"/>
-            <circle cx="182" cy="200" r="4"/>
-            <circle cx="134" cy="252" r="3.5"/>
-            <circle cx="166" cy="252" r="3.5"/>
+          <!-- Kleid-Grundform -->
+          <rect x="86" y="176" width="128" height="104" rx="34" fill="#E8879A"/>
+          <!-- Ärmel -->
+          <path d="M 66 195 Q 60 220 76 240 Q 90 232 88 210 Q 88 198 82 190 Z" fill="#F26D9B"/>
+          <path d="M 234 195 Q 240 220 224 240 Q 210 232 212 210 Q 212 198 218 190 Z" fill="#F26D9B"/>
+          <!-- Rüschen-Schichten am Rock -->
+          <path d="M 92 208 Q 150 226 208 208 L 208 222 Q 150 240 92 222 Z" fill="#F7B8C6"/>
+          <path d="M 90 236 Q 150 256 210 236 L 210 250 Q 150 268 90 250 Z" fill="#F4A0B3"/>
+          <path d="M 88 262 Q 150 282 212 262 L 212 276 Q 150 294 88 276 Z" fill="#EE87A0"/>
+          <!-- Goldene Blütenranken -->
+          <g fill="#F2C879">
+            <circle cx="112" cy="196" r="5"/>
+            <circle cx="150" cy="190" r="5"/>
+            <circle cx="188" cy="196" r="5"/>
+            <circle cx="128" cy="228" r="4.5"/>
+            <circle cx="172" cy="228" r="4.5"/>
+            <circle cx="112" cy="256" r="4.5"/>
+            <circle cx="188" cy="256" r="4.5"/>
           </g>
           <g fill="#F26D9B">
-            <circle cx="118" cy="200" r="2.4"/>
-            <circle cx="150" cy="232" r="2.4"/>
-            <circle cx="182" cy="200" r="2.4"/>
-            <circle cx="134" cy="252" r="2"/>
-            <circle cx="166" cy="252" r="2"/>
+            <circle cx="112" cy="196" r="2.6"/>
+            <circle cx="150" cy="190" r="2.6"/>
+            <circle cx="188" cy="196" r="2.6"/>
+            <circle cx="128" cy="228" r="2.3"/>
+            <circle cx="172" cy="228" r="2.3"/>
+            <circle cx="112" cy="256" r="2.3"/>
+            <circle cx="188" cy="256" r="2.3"/>
           </g>
-          <path d="M 150 186 L 150 186" stroke="none"/>
-          <g fill="none" stroke="#FFFDF9" stroke-width="3" stroke-linecap="round">
-            <path d="M 128 186 Q 150 198 172 186"/>
+          <g fill="#FFFFFF" opacity="0.8">
+            <path d="M 96 214 Q 150 200 204 214" stroke="#FFFFFF" stroke-width="1.6" fill="none"/>
+            <path d="M 94 242 Q 150 228 206 242" stroke="#FFFFFF" stroke-width="1.6" fill="none"/>
           </g>
-          <g fill="#FFFDF9">
-            <circle cx="128" cy="186" r="3"/>
-            <circle cx="138" cy="193" r="3"/>
-            <circle cx="150" cy="196" r="3"/>
-            <circle cx="162" cy="193" r="3"/>
-            <circle cx="172" cy="186" r="3"/>
+          <!-- Perlenkette -->
+          <path d="M 126 186 Q 150 200 174 186" fill="none" stroke="#5C4A42" stroke-width="1" opacity="0.15"/>
+          <g fill="#FFFDF9" stroke="#EADFD2" stroke-width="0.8">
+            <circle cx="126" cy="186" r="3.6"/>
+            <circle cx="136" cy="194" r="3.6"/>
+            <circle cx="150" cy="197" r="3.8"/>
+            <circle cx="164" cy="194" r="3.6"/>
+            <circle cx="174" cy="186" r="3.6"/>
           </g>
         </g>
         <g id="vacationHeadband" class="accessory hidden-acc">
-          <path d="M 100 78 Q 108 60 150 60 Q 192 60 200 78" fill="none" stroke="#FFFDF9" stroke-width="7" stroke-linecap="round"/>
-          <circle cx="122" cy="66" r="7" fill="#F26D9B"/>
-          <circle cx="130" cy="59" r="6" fill="#FFA6C1"/>
-          <circle cx="114" cy="61" r="6" fill="#FFA6C1"/>
-          <circle cx="122" cy="66" r="3.5" fill="#FFD97D"/>
-          <circle cx="178" cy="66" r="6" fill="#F26D9B"/>
-          <circle cx="185" cy="61" r="5" fill="#FFA6C1"/>
+          <path d="M 96 82 Q 106 60 150 58 Q 194 60 204 82" fill="none" stroke="#FFFDF9" stroke-width="9" stroke-linecap="round"/>
+          <!-- Große Lotusblüte -->
+          <g transform="translate(126,60)">
+            <ellipse cx="0" cy="0" rx="7" ry="12" fill="#F7B8C6" transform="rotate(-35)"/>
+            <ellipse cx="0" cy="0" rx="7" ry="12" fill="#F49BB4" transform="rotate(0)"/>
+            <ellipse cx="0" cy="0" rx="7" ry="12" fill="#F7B8C6" transform="rotate(35)"/>
+            <ellipse cx="0" cy="0" rx="6" ry="10" fill="#EE87A0" transform="rotate(-14)"/>
+            <ellipse cx="0" cy="0" rx="6" ry="10" fill="#EE87A0" transform="rotate(14)"/>
+            <circle cx="0" cy="0" r="4.5" fill="#FFD97D"/>
+          </g>
+          <!-- Orchidee -->
+          <g transform="translate(150,50)">
+            <ellipse cx="0" cy="0" rx="5" ry="8" fill="#C9A6E0" transform="rotate(-30)"/>
+            <ellipse cx="0" cy="0" rx="5" ry="8" fill="#C9A6E0" transform="rotate(30)"/>
+            <ellipse cx="0" cy="-1" rx="4" ry="6" fill="#B98FD1"/>
+            <circle cx="0" cy="0" r="2.6" fill="#FFD97D"/>
+          </g>
+          <!-- Kleine Blüte -->
+          <g transform="translate(178,64)" fill="#F26D9B">
+            <circle cx="-4" cy="0" r="4"/>
+            <circle cx="4" cy="0" r="4"/>
+            <circle cx="0" cy="-4" r="4"/>
+            <circle cx="0" cy="4" r="4"/>
+            <circle cx="0" cy="0" r="3" fill="#FFD97D"/>
+          </g>
         </g>
       </svg>
 
@@ -381,6 +529,8 @@
       <span class="action-label" id="sleepBtnLabel">Ins Bett</span>
     </button>
   </footer>
+
+  </div>
 
 </div>
 
