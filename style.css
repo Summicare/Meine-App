@@ -1939,25 +1939,6 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
 .beach-bg.hidden{ display: none; }
 .beach-svg{ width: 100%; height: 100%; display: block; }
 
-.beach-palm{
-  position: absolute;
-  bottom: 22%;
-  font-size: 3rem;
-  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.15));
-  animation: palmSway 4s ease-in-out infinite;
-}
-.beach-palm-left{ left: 2%; transform-origin: bottom center; }
-.beach-palm-right{ right: 2%; transform: scaleX(-1); transform-origin: bottom center; animation-delay: -2s; }
-@keyframes palmSway{
-  0%, 100%{ transform: rotate(-3deg); }
-  50%{ transform: rotate(3deg); }
-}
-.beach-palm-right{ animation-name: palmSwayRight; }
-@keyframes palmSwayRight{
-  0%, 100%{ transform: scaleX(-1) rotate(-3deg); }
-  50%{ transform: scaleX(-1) rotate(3deg); }
-}
-
 .vacation-badge{
   position: absolute;
   top: 64px;
@@ -1992,25 +1973,13 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
   text-align: center;
 }
 .flight-scene.hidden{ display: none; }
-.flight-scene .beach-palm{ opacity: 0.5; z-index: 0; }
 
-.flight-clouds{
+.flight-bg-svg{
   position: absolute;
   inset: 0;
-  pointer-events: none;
-}
-.flight-clouds span{
-  position: absolute;
-  font-size: 2.6rem;
-  opacity: 0.85;
-  animation: cloudDrift 9s linear infinite;
-}
-.flight-clouds span:nth-child(1){ top: 14%; left: -10%; animation-duration: 8s; }
-.flight-clouds span:nth-child(2){ top: 34%; left: -20%; animation-duration: 11s; animation-delay: -3s; }
-.flight-clouds span:nth-child(3){ top: 54%; left: -15%; animation-duration: 9.5s; animation-delay: -6s; }
-@keyframes cloudDrift{
-  0%{ transform: translateX(0); }
-  100%{ transform: translateX(130vw); }
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
 
 /* Detailliertes Flugzeug (statt Emoji): eigene SVG-Illustration analog
@@ -2018,22 +1987,11 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
 .plane{
   position: relative;
   z-index: 1;
-  width: min(78vw, 300px);
+  width: min(92vw, 360px);
   animation: fly 2.2s ease-in-out infinite;
   filter: drop-shadow(0 10px 14px rgba(80,50,40,0.25));
 }
 .plane-svg{ width: 100%; height: auto; display: block; }
-.plane-title{
-  position: absolute;
-  left: 63%;
-  top: 51%;
-  transform: translate(-50%, -50%) rotate(-3deg);
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 800;
-  font-size: 0.66rem;
-  color: #E8879A;
-  white-space: nowrap;
-}
 @keyframes fly{
   0%{ transform: translateY(0px) rotate(-3deg); }
   50%{ transform: translateY(-16px) rotate(1deg); }
