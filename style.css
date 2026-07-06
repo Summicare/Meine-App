@@ -388,8 +388,64 @@ h1, h2, h3, .bear-name, .action-label, .game-card-title, button{
 /* Bär dreht/neigt sich sichtbar zum Fernseher (eine reine Spiegelung wäre
    bei diesem symmetrisch gezeichneten Gesicht kaum zu erkennen gewesen). */
 .bear-wrap.watching-tv .bear-svg{
-  transform: rotate(-9deg) translateX(-16px);
+  transform: rotate(-9deg) translateX(-16px) scale(0.93) translateY(11px);
+  transform-origin: 50% 100%;
   transition: transform 0.4s ease;
+}
+
+/* Arme leicht angezogen im Schlaf, damit die liegende Pose runder/gemütlicher wirkt */
+.bear-wrap.sleeping #armLeft{
+  transform-box: fill-box;
+  transform-origin: 50% 15%;
+  transform: rotate(22deg);
+}
+.bear-wrap.sleeping #armRight{
+  transform-box: fill-box;
+  transform-origin: 50% 15%;
+  transform: rotate(-22deg);
+}
+
+/* ===== Gelegentliche Idle-Posen (Winken / Hinsetzen / Hände) =====
+   Werden zufällig eingeblendet, solange Summi nichts Bestimmtes tut, damit
+   er sich lebendiger anfühlt. Werden per JS entfernt, sobald eine andere
+   Aktivität (Schlafen, Arbeiten, Fernsehen, Spielen ...) beginnt. */
+.bear-wrap.pose-wave #armRight{
+  transform-box: fill-box;
+  transform-origin: 50% 15%;
+  animation: poseWaveArm 0.7s ease-in-out infinite;
+}
+@keyframes poseWaveArm{
+  0%, 100%{ transform: rotate(-52deg); }
+  50%{ transform: rotate(-68deg); }
+}
+
+.bear-wrap.pose-sit .bear-svg{
+  transform: scale(0.93) translateY(11px);
+  transform-origin: 50% 100%;
+  transition: transform 0.3s ease;
+}
+.bear-wrap.pose-sit #armLeft{
+  transform-box: fill-box;
+  transform-origin: 50% 12%;
+  transform: rotate(16deg);
+}
+.bear-wrap.pose-sit #armRight{
+  transform-box: fill-box;
+  transform-origin: 50% 12%;
+  transform: rotate(-16deg);
+}
+
+.bear-wrap.pose-hands #armLeft{
+  transform-box: fill-box;
+  transform-origin: 50% 12%;
+  transform: rotate(20deg);
+  transition: transform 0.3s ease;
+}
+.bear-wrap.pose-hands #armRight{
+  transform-box: fill-box;
+  transform-origin: 50% 12%;
+  transform: rotate(-20deg);
+  transition: transform 0.3s ease;
 }
 
 /* Kleine Spiel-Animation (Spielzeug schaukeln) während der Arbeit */
